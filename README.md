@@ -1,73 +1,40 @@
-# React + TypeScript + Vite
+# My Model House
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+브라우저에서 바로 사용하는 3D 방 배치 시뮬레이터입니다.
+이사, 인테리어, 가구 배치를 미리 계획해볼 수 있습니다.
 
-Currently, two official plugins are available:
+## 사이트 접속
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+**https://mmh-theta.vercel.app/**
 
-## React Compiler
+설치 없이 PC/모바일 브라우저에서 바로 사용할 수 있습니다.
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+## 주요 기능
 
-## Expanding the ESLint configuration
+- **방 만들기** - 여러 개의 방을 추가하고 크기/위치를 자유롭게 조절
+- **가구 배치** - 45종 가구/가전 카탈로그에서 검색 후 클릭으로 배치
+- **드래그 이동** - 가구를 드래그해서 이동, 다른 방으로 옮기기도 가능
+- **90도 회전** - 버튼 또는 단축키(R)로 가구 방향 전환
+- **격자 정렬** - 벽/격자에 자동 맞춤 (자석 스냅)
+- **고정 기능** - 방/가구를 고정해서 실수로 움직이지 않도록 보호
+- **파일 저장/불러오기** - JSON 파일로 다운로드 & 업로드
+- **실행 취소** - Ctrl+Z (Mac: Cmd+Z)로 되돌리기
+- **3D/평면 전환** - 3D 뷰와 위에서 보기 전환
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+## 단축키
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+| 키 | 기능 |
+|----|------|
+| `R` | 오른쪽 90도 회전 |
+| `Shift + R` | 왼쪽 90도 회전 |
+| `Ctrl/Cmd + Z` | 실행 취소 |
+| `Delete / Backspace` | 선택한 가구 삭제 |
+| `Escape` | 선택 해제 |
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
+## 기술 스택
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
+React + TypeScript + Three.js (React Three Fiber) + Zustand + Vite
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+## 라이센스
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
-
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
+MIT License
