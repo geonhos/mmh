@@ -1,52 +1,51 @@
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import Sidebar from './components/layout/Sidebar';
 import Viewport from './components/layout/Viewport';
 import RoomConfigurator from './components/sidebar/RoomConfigurator';
 import FurnitureCatalog from './components/sidebar/FurnitureCatalog';
+import FurniturePanel from './components/sidebar/FurniturePanel';
+import ToolBar from './components/sidebar/ToolBar';
 import Room from './components/scene/Room';
 import SceneLighting from './components/scene/SceneLighting';
 import CameraController, { type CameraPreset } from './components/scene/CameraController';
 import FurnitureItem from './components/scene/FurnitureItem';
 import { useStore } from './store/useStore';
+import { useKeyboardShortcuts } from './hooks/useKeyboardShortcuts';
 import './App.css';
 
 function App() {
   const [cameraPreset, setCameraPreset] = useState<CameraPreset>('perspective');
+  const [transformMode, setTransformMode] = useState<'translate' | 'rotate'>('translate');
   const furnitureList = useStore((s) => s.furnitureList);
   const setSelectedId = useStore((s) => s.setSelectedId);
+
+  const toggleMode = useCallback(() => {
+    setTransformMode((m) => (m === 'translate' ? 'rotate' : 'translate'));
+  }, []);
+
+  useKeyboardShortcuts({ onToggleMode: toggleMode });
 
   return (
     <div className="app-layout">
       <Sidebar>
         <RoomConfigurator />
         <FurnitureCatalog />
-        <section style={{ marginBottom: 24 }}>
-          <h3 style={{ fontSize: 14, marginBottom: 12, color: '#aaa' }}>카메라</h3>
-          <div style={{ display: 'flex', gap: 8 }}>
-            <button
-              className={`preset-btn ${cameraPreset === 'perspective' ? 'active' : ''}`}
-              onClick={() => setCameraPreset('perspective')}
-            >
-              3D 뷰
-            </button>
-            <button
-              className={`preset-btn ${cameraPreset === 'top' ? 'active' : ''}`}
-              onClick={() => setCameraPreset('top')}
-            >
-              탑 뷰
-            </button>
-          </div>
-        </section>
+        <ToolBar
+          mode={transformMode}
+          onModeChange={setTransformMode}
+          cameraPreset={cameraPreset}
+          onCameraChange={setCameraPreset}
+        />
+        <FurniturePanel />
       </Sidebar>
       <Viewport>
         <SceneLighting />
         <Room />
         {furnitureList.map((item) => (
-          <FurnitureItem key={item.id} item={item} />
+          <FurnitureItem key={item.id} item={item} mode={transformMode} />
         ))}
         <CameraController preset={cameraPreset} />
         <gridHelper args={[20, 20, '#444', '#333']} />
-        {/* Click on empty space to deselect */}
         <mesh
           rotation-x={-Math.PI / 2}
           position={[0, -0.01, 0]}
