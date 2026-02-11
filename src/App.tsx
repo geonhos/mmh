@@ -4,6 +4,7 @@ import Viewport from './components/layout/Viewport';
 import RoomConfigurator from './components/sidebar/RoomConfigurator';
 import FurnitureCatalog from './components/sidebar/FurnitureCatalog';
 import FurniturePanel from './components/sidebar/FurniturePanel';
+import PlacedFurnitureList from './components/sidebar/PlacedFurnitureList';
 import ToolBar from './components/sidebar/ToolBar';
 import Room from './components/scene/Room';
 import SceneLighting from './components/scene/SceneLighting';
@@ -27,6 +28,7 @@ function App() {
     <div className="app-layout">
       <Sidebar>
         <RoomConfigurator />
+        <PlacedFurnitureList />
         <FurnitureCatalog />
         <ToolBar
           cameraPreset={cameraPreset}
