@@ -45,11 +45,7 @@ export default function FurnitureItem({ item, mode }: FurnitureItemProps) {
       );
       _raycaster.setFromCamera(_ndc, camera);
       if (!_raycaster.ray.intersectPlane(_floorPlane, _intersection)) return null;
-      // World → room-local coordinates
-      return {
-        x: _intersection.x - room.position[0],
-        z: _intersection.z - room.position[1],
-      };
+      return { worldX: _intersection.x, worldZ: _intersection.z };
     },
     [camera, gl, room],
   );
@@ -62,17 +58,39 @@ export default function FurnitureItem({ item, mode }: FurnitureItemProps) {
       if (controls) (controls as THREE.EventDispatcher & { enabled: boolean }).enabled = false;
 
       const onMove = (ev: PointerEvent) => {
-        if (!draggingRef.current || !groupRef.current) return;
-        const pos = raycastToFloor(ev.clientX, ev.clientY);
-        if (pos) groupRef.current.position.set(pos.x, 0, pos.z);
+        if (!draggingRef.current || !groupRef.current || !room) return;
+        const hit = raycastToFloor(ev.clientX, ev.clientY);
+        if (hit) {
+          // Display in current room-local coordinates
+          groupRef.current.position.set(hit.worldX - room.position[0], 0, hit.worldZ - room.position[1]);
+        }
       };
 
       const onUp = () => {
-        if (!groupRef.current) return;
+        if (!groupRef.current || !room) return;
         draggingRef.current = false;
 
-        let x = groupRef.current.position.x;
-        let z = groupRef.current.position.z;
+        // Convert to world coordinates
+        const worldX = groupRef.current.position.x + room.position[0];
+        const worldZ = groupRef.current.position.z + room.position[1];
+
+        // Find target room: pick the room whose center is closest, or current room if inside bounds
+        const allRooms = useStore.getState().rooms;
+        let targetRoom = room;
+        for (const r of allRooms) {
+          const hw = r.dimensions.width / 2;
+          const hd = r.dimensions.depth / 2;
+          const lx = worldX - r.position[0];
+          const lz = worldZ - r.position[1];
+          if (lx >= -hw && lx <= hw && lz >= -hd && lz <= hd) {
+            targetRoom = r;
+            break;
+          }
+        }
+
+        // Convert to target room-local
+        let x = worldX - targetRoom.position[0];
+        let z = worldZ - targetRoom.position[1];
 
         // Grid snap
         if (snapEnabled) {
@@ -81,9 +99,9 @@ export default function FurnitureItem({ item, mode }: FurnitureItemProps) {
         }
 
         // Wall magnetic snap
-        if (snapEnabled && room) {
-          const maxX = room.dimensions.width / 2 - item.dimensions.width / 2;
-          const maxZ = room.dimensions.depth / 2 - item.dimensions.depth / 2;
+        const maxX = targetRoom.dimensions.width / 2 - item.dimensions.width / 2;
+        const maxZ = targetRoom.dimensions.depth / 2 - item.dimensions.depth / 2;
+        if (snapEnabled) {
           if (maxX - x > 0 && maxX - x < WALL_SNAP_THRESHOLD) x = maxX;
           else if (x + maxX > 0 && x + maxX < WALL_SNAP_THRESHOLD) x = -maxX;
           if (maxZ - z > 0 && maxZ - z < WALL_SNAP_THRESHOLD) z = maxZ;
@@ -91,15 +109,11 @@ export default function FurnitureItem({ item, mode }: FurnitureItemProps) {
         }
 
         // Room boundary clamping
-        if (room) {
-          const hw = room.dimensions.width / 2 - item.dimensions.width / 2;
-          const hd = room.dimensions.depth / 2 - item.dimensions.depth / 2;
-          x = Math.max(-hw, Math.min(hw, x));
-          z = Math.max(-hd, Math.min(hd, z));
-        }
+        x = Math.max(-maxX, Math.min(maxX, x));
+        z = Math.max(-maxZ, Math.min(maxZ, z));
 
         groupRef.current.position.set(x, 0, z);
-        updateFurniture(item.id, { position: [x, 0, z] });
+        updateFurniture(item.id, { position: [x, 0, z], roomId: targetRoom.id });
         if (controls) (controls as THREE.EventDispatcher & { enabled: boolean }).enabled = true;
         gl.domElement.removeEventListener('pointermove', onMove);
         gl.domElement.removeEventListener('pointerup', onUp);
