@@ -2,6 +2,13 @@ import { create } from 'zustand';
 import type { RoomConfig, FurnitureInstance } from '../types';
 import { DEFAULT_ROOM } from '../utils/constants';
 
+const STORAGE_KEY = 'my-model-house-save';
+
+interface SaveData {
+  room: RoomConfig;
+  furnitureList: FurnitureInstance[];
+}
+
 interface AppState {
   room: RoomConfig;
   furnitureList: FurnitureInstance[];
@@ -12,6 +19,8 @@ interface AppState {
   updateFurniture: (id: string, updates: Partial<FurnitureInstance>) => void;
   removeFurniture: (id: string) => void;
   setSelectedId: (id: string | null) => void;
+  save: () => void;
+  load: () => void;
 }
 
 export const useStore = create<AppState>((set) => ({
@@ -39,4 +48,21 @@ export const useStore = create<AppState>((set) => ({
     })),
 
   setSelectedId: (id) => set({ selectedId: id }),
+
+  save: () => {
+    const { room, furnitureList } = useStore.getState();
+    const data: SaveData = { room, furnitureList };
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+  },
+
+  load: () => {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) return;
+    try {
+      const data: SaveData = JSON.parse(raw);
+      set({ room: data.room, furnitureList: data.furnitureList, selectedId: null });
+    } catch {
+      // ignore invalid data
+    }
+  },
 }));

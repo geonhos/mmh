@@ -11,6 +11,8 @@ interface ToolBarProps {
 export default function ToolBar({ mode, onModeChange, cameraPreset, onCameraChange }: ToolBarProps) {
   const selectedId = useStore((s) => s.selectedId);
   const removeFurniture = useStore((s) => s.removeFurniture);
+  const save = useStore((s) => s.save);
+  const load = useStore((s) => s.load);
 
   return (
     <section style={{ marginBottom: 24 }}>
@@ -46,12 +48,20 @@ export default function ToolBar({ mode, onModeChange, cameraPreset, onCameraChan
       {selectedId && (
         <button
           className="preset-btn"
-          style={{ width: '100%', color: '#ff6b6b' }}
+          style={{ width: '100%', color: '#ff6b6b', marginBottom: 10 }}
           onClick={() => removeFurniture(selectedId)}
         >
           삭제 (Del)
         </button>
       )}
+      <div style={{ display: 'flex', gap: 6 }}>
+        <button className="preset-btn" style={{ flex: 1 }} onClick={save}>
+          저장
+        </button>
+        <button className="preset-btn" style={{ flex: 1 }} onClick={load}>
+          불러오기
+        </button>
+      </div>
     </section>
   );
 }
