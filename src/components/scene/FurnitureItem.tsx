@@ -1,7 +1,6 @@
 import { useRef, useCallback } from 'react';
 import type { Group } from 'three';
 import * as THREE from 'three';
-import { TransformControls } from '@react-three/drei';
 import { useThree } from '@react-three/fiber';
 import type { ThreeEvent } from '@react-three/fiber';
 import type { FurnitureInstance } from '../../types';
@@ -19,10 +18,9 @@ const _ndc = new THREE.Vector2();
 
 interface FurnitureItemProps {
   item: FurnitureInstance;
-  mode: 'translate' | 'rotate';
 }
 
-export default function FurnitureItem({ item, mode }: FurnitureItemProps) {
+export default function FurnitureItem({ item }: FurnitureItemProps) {
   const groupRef = useRef<Group>(null);
   const draggingRef = useRef(false);
   const selectedFurnitureId = useStore((s) => s.selectedFurnitureId);
@@ -52,7 +50,7 @@ export default function FurnitureItem({ item, mode }: FurnitureItemProps) {
 
   const handlePointerDown = useCallback(
     (e: ThreeEvent<PointerEvent>) => {
-      if (mode !== 'translate' || !isSelected || item.locked) return;
+      if (!isSelected || item.locked) return;
       e.stopPropagation();
       draggingRef.current = true;
       if (controls) (controls as THREE.EventDispatcher & { enabled: boolean }).enabled = false;
@@ -122,57 +120,40 @@ export default function FurnitureItem({ item, mode }: FurnitureItemProps) {
       gl.domElement.addEventListener('pointermove', onMove);
       gl.domElement.addEventListener('pointerup', onUp);
     },
-    [mode, isSelected, controls, gl, raycastToFloor, snapEnabled, room, item, updateFurniture],
+    [isSelected, controls, gl, raycastToFloor, snapEnabled, room, item, updateFurniture],
   );
 
-  const handleRotateChange = () => {
-    const obj = groupRef.current;
-    if (!obj) return;
-    updateFurniture(item.id, {
-      rotation: [obj.rotation.x, obj.rotation.y, obj.rotation.z],
-    });
-  };
-
   return (
-    <>
-      <group
-        ref={groupRef}
-        position={item.position}
-        rotation={item.rotation}
-        onClick={(e) => {
-          if (draggingRef.current) return;
-          e.stopPropagation();
-          setSelectedFurnitureId(item.id);
-        }}
-        onPointerDown={handlePointerDown}
-      >
-        <FurnitureGeometry
-          catalogId={item.catalogId}
-          width={item.dimensions.width}
-          depth={item.dimensions.depth}
-          height={item.dimensions.height}
-          color={item.color}
-        />
-        {isSelected && (
-          <mesh position={[0, item.dimensions.height / 2, 0]}>
-            <boxGeometry
-              args={[
-                item.dimensions.width + 0.05,
-                item.dimensions.height + 0.05,
-                item.dimensions.depth + 0.05,
-              ]}
-            />
-            <meshBasicMaterial color="#646cff" wireframe />
-          </mesh>
-        )}
-      </group>
-      {isSelected && mode === 'rotate' && groupRef.current && (
-        <TransformControls
-          object={groupRef.current}
-          mode="rotate"
-          onMouseUp={handleRotateChange}
-        />
+    <group
+      ref={groupRef}
+      position={item.position}
+      rotation={item.rotation}
+      onClick={(e) => {
+        if (draggingRef.current) return;
+        e.stopPropagation();
+        setSelectedFurnitureId(item.id);
+      }}
+      onPointerDown={handlePointerDown}
+    >
+      <FurnitureGeometry
+        catalogId={item.catalogId}
+        width={item.dimensions.width}
+        depth={item.dimensions.depth}
+        height={item.dimensions.height}
+        color={item.color}
+      />
+      {isSelected && (
+        <mesh position={[0, item.dimensions.height / 2, 0]}>
+          <boxGeometry
+            args={[
+              item.dimensions.width + 0.05,
+              item.dimensions.height + 0.05,
+              item.dimensions.depth + 0.05,
+            ]}
+          />
+          <meshBasicMaterial color="#646cff" wireframe />
+        </mesh>
       )}
-    </>
+    </group>
   );
 }

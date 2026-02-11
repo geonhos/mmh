@@ -178,8 +178,9 @@ export default function RoomConfigurator() {
               className={`preset-btn ${selectedRoom.locked ? 'active' : ''}`}
               style={{ width: '100%' }}
               onClick={() => updateRoom(selectedRoom.id, { locked: !selectedRoom.locked })}
+              title={selectedRoom.locked ? '클릭하면 방을 다시 움직일 수 있습니다' : '클릭하면 방이 고정되어 실수로 움직이지 않습니다'}
             >
-              이동 {selectedRoom.locked ? '잠금' : '해제'}
+              {selectedRoom.locked ? '고정됨 (눌러서 해제)' : '고정하기'}
             </button>
           </div>
 

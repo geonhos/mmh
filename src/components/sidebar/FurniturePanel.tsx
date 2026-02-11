@@ -21,8 +21,9 @@ export default function FurniturePanel() {
           className={`preset-btn ${item.locked ? 'active' : ''}`}
           style={{ width: '100%' }}
           onClick={() => updateFurniture(item.id, { locked: !item.locked })}
+          title={item.locked ? '클릭하면 가구를 다시 움직일 수 있습니다' : '클릭하면 가구가 고정되어 실수로 움직이지 않습니다'}
         >
-          이동 {item.locked ? '잠금' : '해제'}
+          {item.locked ? '고정됨 (눌러서 해제)' : '고정하기'}
         </button>
       </div>
       <div style={{ fontSize: 12 }}>

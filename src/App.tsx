@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState } from 'react';
 import Sidebar from './components/layout/Sidebar';
 import Viewport from './components/layout/Viewport';
 import RoomConfigurator from './components/sidebar/RoomConfigurator';
@@ -15,18 +15,13 @@ import './App.css';
 
 function App() {
   const [cameraPreset, setCameraPreset] = useState<CameraPreset>('perspective');
-  const [transformMode, setTransformMode] = useState<'translate' | 'rotate'>('translate');
   const rooms = useStore((s) => s.rooms);
   const furnitureList = useStore((s) => s.furnitureList);
   const selectedRoomId = useStore((s) => s.selectedRoomId);
   const setSelectedRoomId = useStore((s) => s.setSelectedRoomId);
   const setSelectedFurnitureId = useStore((s) => s.setSelectedFurnitureId);
 
-  const toggleMode = useCallback(() => {
-    setTransformMode((m) => (m === 'translate' ? 'rotate' : 'translate'));
-  }, []);
-
-  useKeyboardShortcuts({ onToggleMode: toggleMode });
+  useKeyboardShortcuts();
 
   return (
     <div className="app-layout">
@@ -34,8 +29,6 @@ function App() {
         <RoomConfigurator />
         <FurnitureCatalog />
         <ToolBar
-          mode={transformMode}
-          onModeChange={setTransformMode}
           cameraPreset={cameraPreset}
           onCameraChange={setCameraPreset}
         />
@@ -53,7 +46,7 @@ function App() {
             {furnitureList
               .filter((f) => f.roomId === room.id)
               .map((item) => (
-                <FurnitureItem key={item.id} item={item} mode={transformMode} />
+                <FurnitureItem key={item.id} item={item} />
               ))}
           </Room>
         ))}

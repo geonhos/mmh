@@ -3,14 +3,14 @@ import { useStore } from '../../store/useStore';
 import type { CameraPreset } from '../scene/CameraController';
 
 interface ToolBarProps {
-  mode: 'translate' | 'rotate';
-  onModeChange: (mode: 'translate' | 'rotate') => void;
   cameraPreset: CameraPreset;
   onCameraChange: (preset: CameraPreset) => void;
 }
 
-export default function ToolBar({ mode, onModeChange, cameraPreset, onCameraChange }: ToolBarProps) {
+export default function ToolBar({ cameraPreset, onCameraChange }: ToolBarProps) {
   const selectedFurnitureId = useStore((s) => s.selectedFurnitureId);
+  const furnitureList = useStore((s) => s.furnitureList);
+  const updateFurniture = useStore((s) => s.updateFurniture);
   const removeFurniture = useStore((s) => s.removeFurniture);
   const snapEnabled = useStore((s) => s.snapEnabled);
   const setSnapEnabled = useStore((s) => s.setSnapEnabled);
@@ -18,23 +18,51 @@ export default function ToolBar({ mode, onModeChange, cameraPreset, onCameraChan
   const importFromFile = useStore((s) => s.importFromFile);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  const selectedItem = furnitureList.find((f) => f.id === selectedFurnitureId);
+
+  const rotateY = (angle: number) => {
+    if (!selectedItem) return;
+    updateFurniture(selectedItem.id, {
+      rotation: [selectedItem.rotation[0], selectedItem.rotation[1] + angle, selectedItem.rotation[2]],
+    });
+  };
+
   return (
     <section style={{ marginBottom: 24 }}>
-      <h3 style={{ fontSize: 14, marginBottom: 12, color: '#aaa' }}>도구</h3>
-      <div style={{ display: 'flex', gap: 6, marginBottom: 10 }}>
-        <button
-          className={`preset-btn ${mode === 'translate' ? 'active' : ''}`}
-          onClick={() => onModeChange('translate')}
-        >
-          이동 (G)
-        </button>
-        <button
-          className={`preset-btn ${mode === 'rotate' ? 'active' : ''}`}
-          onClick={() => onModeChange('rotate')}
-        >
-          회전 (R)
-        </button>
-      </div>
+      {/* Furniture actions */}
+      {selectedItem && (
+        <>
+          <h3 style={{ fontSize: 14, marginBottom: 8, color: '#aaa' }}>가구 조작</h3>
+          <div style={{ display: 'flex', gap: 6, marginBottom: 10 }}>
+            <button
+              className="preset-btn"
+              style={{ flex: 1 }}
+              onClick={() => rotateY(-Math.PI / 2)}
+              title="왼쪽으로 90° 회전 (Shift+R)"
+            >
+              ← 90° 회전
+            </button>
+            <button
+              className="preset-btn"
+              style={{ flex: 1 }}
+              onClick={() => rotateY(Math.PI / 2)}
+              title="오른쪽으로 90° 회전 (R)"
+            >
+              90° 회전 →
+            </button>
+          </div>
+          <button
+            className="preset-btn"
+            style={{ width: '100%', color: '#ff6b6b', marginBottom: 10 }}
+            onClick={() => removeFurniture(selectedFurnitureId!)}
+          >
+            삭제 (Del)
+          </button>
+        </>
+      )}
+
+      {/* View */}
+      <h3 style={{ fontSize: 14, marginBottom: 8, color: '#aaa' }}>보기</h3>
       <div style={{ display: 'flex', gap: 6, marginBottom: 10 }}>
         <button
           className={`preset-btn ${cameraPreset === 'perspective' ? 'active' : ''}`}
@@ -46,7 +74,7 @@ export default function ToolBar({ mode, onModeChange, cameraPreset, onCameraChan
           className={`preset-btn ${cameraPreset === 'top' ? 'active' : ''}`}
           onClick={() => onCameraChange('top')}
         >
-          탑 뷰
+          위에서 보기
         </button>
       </div>
       <div style={{ display: 'flex', gap: 6, marginBottom: 10 }}>
@@ -54,19 +82,14 @@ export default function ToolBar({ mode, onModeChange, cameraPreset, onCameraChan
           className={`preset-btn ${snapEnabled ? 'active' : ''}`}
           style={{ flex: 1 }}
           onClick={() => setSnapEnabled(!snapEnabled)}
+          title="켜면 가구와 방이 격자/벽에 딱 맞게 정렬됩니다"
         >
-          스냅 {snapEnabled ? 'ON' : 'OFF'}
+          격자 정렬 {snapEnabled ? 'ON' : 'OFF'}
         </button>
       </div>
-      {selectedFurnitureId && (
-        <button
-          className="preset-btn"
-          style={{ width: '100%', color: '#ff6b6b', marginBottom: 10 }}
-          onClick={() => removeFurniture(selectedFurnitureId)}
-        >
-          삭제 (Del)
-        </button>
-      )}
+
+      {/* File */}
+      <h3 style={{ fontSize: 14, marginBottom: 8, color: '#aaa' }}>파일</h3>
       <div style={{ display: 'flex', gap: 6 }}>
         <button className="preset-btn" style={{ flex: 1 }} onClick={exportToFile}>
           저장

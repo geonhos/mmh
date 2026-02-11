@@ -1,11 +1,7 @@
 import { useEffect } from 'react';
 import { useStore } from '../store/useStore';
 
-interface KeyboardShortcutsOptions {
-  onToggleMode: () => void;
-}
-
-export function useKeyboardShortcuts({ onToggleMode }: KeyboardShortcutsOptions) {
+export function useKeyboardShortcuts() {
   const removeFurniture = useStore((s) => s.removeFurniture);
   const setSelectedFurnitureId = useStore((s) => s.setSelectedFurnitureId);
   const selectedFurnitureId = useStore((s) => s.selectedFurnitureId);
@@ -17,29 +13,29 @@ export function useKeyboardShortcuts({ onToggleMode }: KeyboardShortcutsOptions)
       const tag = (e.target as HTMLElement).tagName;
       if (tag === 'INPUT' || tag === 'TEXTAREA') return;
 
+      if (!selectedFurnitureId) return;
+      const item = furnitureList.find((f) => f.id === selectedFurnitureId);
+
       switch (e.key) {
         case 'r':
-        case 'R':
-          if (selectedFurnitureId) {
-            const item = furnitureList.find((f) => f.id === selectedFurnitureId);
-            if (item) {
-              updateFurniture(selectedFurnitureId, {
-                rotation: [item.rotation[0], item.rotation[1] + Math.PI / 2, item.rotation[2]],
-              });
-            }
-          } else {
-            onToggleMode();
+          // Rotate right 90°
+          if (item) {
+            updateFurniture(selectedFurnitureId, {
+              rotation: [item.rotation[0], item.rotation[1] + Math.PI / 2, item.rotation[2]],
+            });
           }
           break;
-        case 'g':
-        case 'G':
-          onToggleMode();
+        case 'R':
+          // Rotate left 90°
+          if (item) {
+            updateFurniture(selectedFurnitureId, {
+              rotation: [item.rotation[0], item.rotation[1] - Math.PI / 2, item.rotation[2]],
+            });
+          }
           break;
         case 'Delete':
         case 'Backspace':
-          if (selectedFurnitureId) {
-            removeFurniture(selectedFurnitureId);
-          }
+          removeFurniture(selectedFurnitureId);
           break;
         case 'Escape':
           setSelectedFurnitureId(null);
@@ -49,5 +45,5 @@ export function useKeyboardShortcuts({ onToggleMode }: KeyboardShortcutsOptions)
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [selectedFurnitureId, furnitureList, removeFurniture, setSelectedFurnitureId, updateFurniture, onToggleMode]);
+  }, [selectedFurnitureId, furnitureList, removeFurniture, setSelectedFurnitureId, updateFurniture]);
 }
