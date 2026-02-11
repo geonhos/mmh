@@ -1,35 +1,104 @@
 import { create } from 'zustand';
-import type { RoomConfig, FurnitureInstance } from '../types';
-import { DEFAULT_ROOM } from '../utils/constants';
+import type { RoomConfig, RoomInstance, FurnitureInstance } from '../types';
+import { createDefaultRoom } from '../utils/constants';
 
 const STORAGE_KEY = 'my-model-house-save';
+const SAVE_VERSION = 2;
 
-interface SaveData {
+interface SaveDataV1 {
   room: RoomConfig;
   furnitureList: FurnitureInstance[];
 }
 
-interface AppState {
-  room: RoomConfig;
+interface SaveDataV2 {
+  version: 2;
+  rooms: RoomInstance[];
   furnitureList: FurnitureInstance[];
-  selectedId: string | null;
+}
 
-  setRoom: (room: Partial<RoomConfig>) => void;
+type SaveData = SaveDataV2;
+
+function migrateV1toV2(v1: SaveDataV1): SaveDataV2 {
+  const defaultRoom = createDefaultRoom('방 1');
+  defaultRoom.dimensions = v1.room;
+  return {
+    version: 2,
+    rooms: [defaultRoom],
+    furnitureList: v1.furnitureList.map((f) => ({
+      ...f,
+      roomId: f.roomId ?? defaultRoom.id,
+    })),
+  };
+}
+
+function parseSaveData(raw: string): SaveDataV2 | null {
+  try {
+    const data = JSON.parse(raw);
+    if (data.version === 2) return data as SaveDataV2;
+    // v1: has room + furnitureList but no version
+    if (data.room && data.furnitureList) return migrateV1toV2(data as SaveDataV1);
+    return null;
+  } catch {
+    return null;
+  }
+}
+
+const initialRoom = createDefaultRoom('방 1');
+
+interface AppState {
+  rooms: RoomInstance[];
+  selectedRoomId: string | null;
+  furnitureList: FurnitureInstance[];
+  selectedFurnitureId: string | null;
+  snapEnabled: boolean;
+
+  // Room CRUD
+  addRoom: (room: RoomInstance) => void;
+  updateRoom: (id: string, updates: Partial<Omit<RoomInstance, 'id'>>) => void;
+  removeRoom: (id: string) => void;
+  setSelectedRoomId: (id: string | null) => void;
+
+  // Furniture
   addFurniture: (item: FurnitureInstance) => void;
   updateFurniture: (id: string, updates: Partial<FurnitureInstance>) => void;
   removeFurniture: (id: string) => void;
-  setSelectedId: (id: string | null) => void;
+  setSelectedFurnitureId: (id: string | null) => void;
+
+  // Snap
+  setSnapEnabled: (enabled: boolean) => void;
+
+  // Persistence
   save: () => void;
   load: () => void;
 }
 
 export const useStore = create<AppState>((set) => ({
-  room: DEFAULT_ROOM,
+  rooms: [initialRoom],
+  selectedRoomId: initialRoom.id,
   furnitureList: [],
-  selectedId: null,
+  selectedFurnitureId: null,
+  snapEnabled: true,
 
-  setRoom: (partial) =>
-    set((state) => ({ room: { ...state.room, ...partial } })),
+  addRoom: (room) =>
+    set((state) => ({ rooms: [...state.rooms, room] })),
+
+  updateRoom: (id, updates) =>
+    set((state) => ({
+      rooms: state.rooms.map((r) =>
+        r.id === id ? { ...r, ...updates } : r
+      ),
+    })),
+
+  removeRoom: (id) =>
+    set((state) => ({
+      rooms: state.rooms.filter((r) => r.id !== id),
+      furnitureList: state.furnitureList.filter((f) => f.roomId !== id),
+      selectedRoomId: state.selectedRoomId === id
+        ? (state.rooms.find((r) => r.id !== id)?.id ?? null)
+        : state.selectedRoomId,
+    })),
+
+  setSelectedRoomId: (id) => set({ selectedRoomId: id }),
 
   addFurniture: (item) =>
     set((state) => ({ furnitureList: [...state.furnitureList, item] })),
@@ -44,25 +113,29 @@ export const useStore = create<AppState>((set) => ({
   removeFurniture: (id) =>
     set((state) => ({
       furnitureList: state.furnitureList.filter((f) => f.id !== id),
-      selectedId: state.selectedId === id ? null : state.selectedId,
+      selectedFurnitureId: state.selectedFurnitureId === id ? null : state.selectedFurnitureId,
     })),
 
-  setSelectedId: (id) => set({ selectedId: id }),
+  setSelectedFurnitureId: (id) => set({ selectedFurnitureId: id }),
+
+  setSnapEnabled: (enabled) => set({ snapEnabled: enabled }),
 
   save: () => {
-    const { room, furnitureList } = useStore.getState();
-    const data: SaveData = { room, furnitureList };
+    const { rooms, furnitureList } = useStore.getState();
+    const data: SaveData = { version: SAVE_VERSION, rooms, furnitureList };
     localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
   },
 
   load: () => {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (!raw) return;
-    try {
-      const data: SaveData = JSON.parse(raw);
-      set({ room: data.room, furnitureList: data.furnitureList, selectedId: null });
-    } catch {
-      // ignore invalid data
-    }
+    const data = parseSaveData(raw);
+    if (!data) return;
+    set({
+      rooms: data.rooms,
+      furnitureList: data.furnitureList,
+      selectedRoomId: data.rooms[0]?.id ?? null,
+      selectedFurnitureId: null,
+    });
   },
 }));
