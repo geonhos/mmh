@@ -7,11 +7,19 @@ export function useKeyboardShortcuts() {
   const selectedFurnitureId = useStore((s) => s.selectedFurnitureId);
   const updateFurniture = useStore((s) => s.updateFurniture);
   const furnitureList = useStore((s) => s.furnitureList);
+  const undo = useStore((s) => s.undo);
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       const tag = (e.target as HTMLElement).tagName;
       if (tag === 'INPUT' || tag === 'TEXTAREA') return;
+
+      // Ctrl+Z / Cmd+Z: Undo
+      if ((e.ctrlKey || e.metaKey) && e.key === 'z') {
+        e.preventDefault();
+        undo();
+        return;
+      }
 
       if (!selectedFurnitureId) return;
       const item = furnitureList.find((f) => f.id === selectedFurnitureId);
@@ -45,5 +53,5 @@ export function useKeyboardShortcuts() {
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [selectedFurnitureId, furnitureList, removeFurniture, setSelectedFurnitureId, updateFurniture]);
+  }, [selectedFurnitureId, furnitureList, removeFurniture, setSelectedFurnitureId, updateFurniture, undo]);
 }

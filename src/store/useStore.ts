@@ -3,6 +3,7 @@ import type { RoomConfig, RoomInstance, FurnitureInstance } from '../types';
 import { createDefaultRoom } from '../utils/constants';
 
 const SAVE_VERSION = 2;
+const MAX_HISTORY = 50;
 
 interface SaveDataV1 {
   room: RoomConfig;
@@ -42,6 +43,12 @@ function parseSaveData(raw: string): SaveDataV2 | null {
   }
 }
 
+/** Snapshot of undoable state */
+interface Snapshot {
+  rooms: RoomInstance[];
+  furnitureList: FurnitureInstance[];
+}
+
 const initialRoom = createDefaultRoom('방 1');
 
 interface AppState {
@@ -50,6 +57,10 @@ interface AppState {
   furnitureList: FurnitureInstance[];
   selectedFurnitureId: string | null;
   snapEnabled: boolean;
+
+  // Undo
+  _history: Snapshot[];
+  undo: () => void;
 
   // Room CRUD
   addRoom: (room: RoomInstance) => void;
@@ -71,18 +82,50 @@ interface AppState {
   importFromFile: (json: string) => void;
 }
 
+function pushHistory(state: AppState): Snapshot[] {
+  const snapshot: Snapshot = {
+    rooms: state.rooms,
+    furnitureList: state.furnitureList,
+  };
+  const history = [...state._history, snapshot];
+  if (history.length > MAX_HISTORY) history.shift();
+  return history;
+}
+
 export const useStore = create<AppState>((set) => ({
   rooms: [initialRoom],
   selectedRoomId: initialRoom.id,
   furnitureList: [],
   selectedFurnitureId: null,
   snapEnabled: true,
+  _history: [],
+
+  undo: () =>
+    set((state) => {
+      if (state._history.length === 0) return state;
+      const history = [...state._history];
+      const snapshot = history.pop()!;
+      return {
+        ...snapshot,
+        _history: history,
+        selectedRoomId: snapshot.rooms.find((r) => r.id === state.selectedRoomId)
+          ? state.selectedRoomId
+          : snapshot.rooms[0]?.id ?? null,
+        selectedFurnitureId: snapshot.furnitureList.find((f) => f.id === state.selectedFurnitureId)
+          ? state.selectedFurnitureId
+          : null,
+      };
+    }),
 
   addRoom: (room) =>
-    set((state) => ({ rooms: [...state.rooms, room] })),
+    set((state) => ({
+      _history: pushHistory(state),
+      rooms: [...state.rooms, room],
+    })),
 
   updateRoom: (id, updates) =>
     set((state) => ({
+      _history: pushHistory(state),
       rooms: state.rooms.map((r) =>
         r.id === id ? { ...r, ...updates } : r
       ),
@@ -90,6 +133,7 @@ export const useStore = create<AppState>((set) => ({
 
   removeRoom: (id) =>
     set((state) => ({
+      _history: pushHistory(state),
       rooms: state.rooms.filter((r) => r.id !== id),
       furnitureList: state.furnitureList.filter((f) => f.roomId !== id),
       selectedRoomId: state.selectedRoomId === id
@@ -100,10 +144,14 @@ export const useStore = create<AppState>((set) => ({
   setSelectedRoomId: (id) => set({ selectedRoomId: id }),
 
   addFurniture: (item) =>
-    set((state) => ({ furnitureList: [...state.furnitureList, item] })),
+    set((state) => ({
+      _history: pushHistory(state),
+      furnitureList: [...state.furnitureList, item],
+    })),
 
   updateFurniture: (id, updates) =>
     set((state) => ({
+      _history: pushHistory(state),
       furnitureList: state.furnitureList.map((f) =>
         f.id === id ? { ...f, ...updates } : f
       ),
@@ -111,6 +159,7 @@ export const useStore = create<AppState>((set) => ({
 
   removeFurniture: (id) =>
     set((state) => ({
+      _history: pushHistory(state),
       furnitureList: state.furnitureList.filter((f) => f.id !== id),
       selectedFurnitureId: state.selectedFurnitureId === id ? null : state.selectedFurnitureId,
     })),
@@ -134,11 +183,12 @@ export const useStore = create<AppState>((set) => ({
   importFromFile: (json: string) => {
     const data = parseSaveData(json);
     if (!data) return;
-    set({
+    set((state) => ({
+      _history: pushHistory(state),
       rooms: data.rooms,
       furnitureList: data.furnitureList,
       selectedRoomId: data.rooms[0]?.id ?? null,
       selectedFurnitureId: null,
-    });
+    }));
   },
 }));
