@@ -131,9 +131,31 @@ export default function RoomConfigurator() {
 
           {dimFields.map(({ label, key, min, max, step }) => (
             <div key={key} style={{ marginBottom: 10 }}>
-              <label style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13 }}>
+              <label style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: 13 }}>
                 <span>{label}</span>
-                <span>{selectedRoom.dimensions[key].toFixed(1)}</span>
+                <input
+                  type="number"
+                  min={min}
+                  max={max}
+                  step={step ?? 0.5}
+                  value={selectedRoom.dimensions[key]}
+                  onChange={(e) => {
+                    const val = Math.min(max, Math.max(min, parseFloat(e.target.value) || min));
+                    updateRoom(selectedRoom.id, {
+                      dimensions: { ...selectedRoom.dimensions, [key]: val },
+                    });
+                  }}
+                  style={{
+                    width: 64,
+                    padding: '2px 6px',
+                    background: '#222',
+                    border: '1px solid #444',
+                    borderRadius: 4,
+                    color: '#ddd',
+                    fontSize: 12,
+                    textAlign: 'right',
+                  }}
+                />
               </label>
               <input
                 type="range"
