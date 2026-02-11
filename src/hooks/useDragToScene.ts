@@ -4,6 +4,9 @@ import { getSceneRefs } from '../components/scene/SceneBridge';
 import { furnitureCatalog } from '../store/furnitureCatalog';
 import { useStore } from '../store/useStore';
 import { generateId } from '../utils/ids';
+import { GRID_SNAP_SIZE } from '../utils/constants';
+
+const snap = (v: number, grid: number) => Math.round(v / grid) * grid;
 
 const floorPlane = new Plane(new Vector3(0, 1, 0), 0);
 
@@ -66,8 +69,12 @@ export function useDragToScene(containerRef: React.RefObject<HTMLDivElement | nu
         const fallback = state.rooms.find((r) => r.id === state.selectedRoomId);
         if (!fallback) return;
 
-        const localX = intersect.x - fallback.position[0];
-        const localZ = intersect.z - fallback.position[1];
+        let localX = intersect.x - fallback.position[0];
+        let localZ = intersect.z - fallback.position[1];
+        if (useStore.getState().snapEnabled) {
+          localX = snap(localX, GRID_SNAP_SIZE);
+          localZ = snap(localZ, GRID_SNAP_SIZE);
+        }
 
         addRef.current({
           id: generateId(),
@@ -83,8 +90,12 @@ export function useDragToScene(containerRef: React.RefObject<HTMLDivElement | nu
       }
 
       // Convert world coords to room-local coords
-      const localX = intersect.x - targetRoom.position[0];
-      const localZ = intersect.z - targetRoom.position[1];
+      let localX = intersect.x - targetRoom.position[0];
+      let localZ = intersect.z - targetRoom.position[1];
+      if (useStore.getState().snapEnabled) {
+        localX = snap(localX, GRID_SNAP_SIZE);
+        localZ = snap(localZ, GRID_SNAP_SIZE);
+      }
 
       addRef.current({
         id: generateId(),

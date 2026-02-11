@@ -11,6 +11,8 @@ interface ToolBarProps {
 export default function ToolBar({ mode, onModeChange, cameraPreset, onCameraChange }: ToolBarProps) {
   const selectedFurnitureId = useStore((s) => s.selectedFurnitureId);
   const removeFurniture = useStore((s) => s.removeFurniture);
+  const snapEnabled = useStore((s) => s.snapEnabled);
+  const setSnapEnabled = useStore((s) => s.setSnapEnabled);
   const save = useStore((s) => s.save);
   const load = useStore((s) => s.load);
 
@@ -43,6 +45,15 @@ export default function ToolBar({ mode, onModeChange, cameraPreset, onCameraChan
           onClick={() => onCameraChange('top')}
         >
           탑 뷰
+        </button>
+      </div>
+      <div style={{ display: 'flex', gap: 6, marginBottom: 10 }}>
+        <button
+          className={`preset-btn ${snapEnabled ? 'active' : ''}`}
+          style={{ flex: 1 }}
+          onClick={() => setSnapEnabled(!snapEnabled)}
+        >
+          스냅 {snapEnabled ? 'ON' : 'OFF'}
         </button>
       </div>
       {selectedFurnitureId && (
