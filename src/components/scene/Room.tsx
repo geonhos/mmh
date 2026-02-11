@@ -1,9 +1,17 @@
-import { useMemo } from 'react';
+import { useRef, useMemo, useCallback } from 'react';
 import type { ReactNode } from 'react';
+import type { Group } from 'three';
 import * as THREE from 'three';
+import { useThree } from '@react-three/fiber';
+import type { ThreeEvent } from '@react-three/fiber';
 import type { RoomInstance } from '../../types';
 import { useStore } from '../../store/useStore';
 import { COLORS, GRID_SNAP_SIZE } from '../../utils/constants';
+
+const _floorPlane = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0);
+const _intersection = new THREE.Vector3();
+const _raycaster = new THREE.Raycaster();
+const _ndc = new THREE.Vector2();
 
 function FloorGrid({ width, depth }: { width: number; depth: number }) {
   const geometry = useMemo(() => {
@@ -44,18 +52,62 @@ export default function Room({ room, isSelected, onSelect, children }: RoomProps
   const { width, depth, height } = room.dimensions;
   const wallThickness = 0.08;
   const snapEnabled = useStore((s) => s.snapEnabled);
+  const updateRoom = useStore((s) => s.updateRoom);
+  const groupRef = useRef<Group>(null);
+  const draggingRef = useRef(false);
+  const { camera, gl, controls } = useThree();
+
+  const handleFloorPointerDown = useCallback(
+    (e: ThreeEvent<PointerEvent>) => {
+      e.stopPropagation();
+
+      // First click selects; drag only on already-selected room
+      if (!isSelected) {
+        onSelect();
+        return;
+      }
+
+      draggingRef.current = true;
+      if (controls) (controls as THREE.EventDispatcher & { enabled: boolean }).enabled = false;
+
+      const onMove = (ev: PointerEvent) => {
+        if (!draggingRef.current || !groupRef.current) return;
+        const rect = gl.domElement.getBoundingClientRect();
+        _ndc.set(
+          ((ev.clientX - rect.left) / rect.width) * 2 - 1,
+          -((ev.clientY - rect.top) / rect.height) * 2 + 1,
+        );
+        _raycaster.setFromCamera(_ndc, camera);
+        if (_raycaster.ray.intersectPlane(_floorPlane, _intersection)) {
+          groupRef.current.position.set(_intersection.x, 0, _intersection.z);
+        }
+      };
+
+      const onUp = () => {
+        if (!groupRef.current) return;
+        draggingRef.current = false;
+        const x = groupRef.current.position.x;
+        const z = groupRef.current.position.z;
+        updateRoom(room.id, { position: [x, z] });
+        if (controls) (controls as THREE.EventDispatcher & { enabled: boolean }).enabled = true;
+        gl.domElement.removeEventListener('pointermove', onMove);
+        gl.domElement.removeEventListener('pointerup', onUp);
+      };
+
+      gl.domElement.addEventListener('pointermove', onMove);
+      gl.domElement.addEventListener('pointerup', onUp);
+    },
+    [isSelected, onSelect, controls, gl, camera, updateRoom, room.id],
+  );
 
   return (
-    <group position={[room.position[0], 0, room.position[1]]}>
+    <group ref={groupRef} position={[room.position[0], 0, room.position[1]]}>
       {/* Floor */}
       <mesh
         rotation-x={-Math.PI / 2}
         position={[0, 0, 0]}
         receiveShadow
-        onClick={(e) => {
-          e.stopPropagation();
-          onSelect();
-        }}
+        onPointerDown={handleFloorPointerDown}
       >
         <planeGeometry args={[width, depth]} />
         <meshStandardMaterial color={COLORS.floor} />

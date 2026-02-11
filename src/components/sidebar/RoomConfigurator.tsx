@@ -1,5 +1,33 @@
+import type { RoomInstance } from '../../types';
 import { useStore } from '../../store/useStore';
-import { createDefaultRoom } from '../../utils/constants';
+import { createDefaultRoom, DEFAULT_ROOM } from '../../utils/constants';
+
+/** Find a grid position that doesn't overlap any existing room. */
+function findNonOverlappingPosition(rooms: RoomInstance[]): [number, number] {
+  if (rooms.length === 0) return [0, 0];
+
+  const cellW = DEFAULT_ROOM.width + 1; // room width + 1m gap
+  const cellD = DEFAULT_ROOM.depth + 1;
+
+  const occupied = new Set(
+    rooms.map((r) => {
+      const col = Math.round(r.position[0] / cellW);
+      const row = Math.round(r.position[1] / cellD);
+      return `${col},${row}`;
+    }),
+  );
+
+  // Spiral-style search: row by row, column by column
+  for (let row = 0; row < 10; row++) {
+    for (let col = 0; col < 10; col++) {
+      if (!occupied.has(`${col},${row}`)) {
+        return [col * cellW, row * cellD];
+      }
+    }
+  }
+
+  return [rooms.length * cellW, 0];
+}
 
 export default function RoomConfigurator() {
   const rooms = useStore((s) => s.rooms);
@@ -71,7 +99,7 @@ export default function RoomConfigurator() {
         style={{ width: '100%', marginBottom: 12 }}
         onClick={() => {
           const newRoom = createDefaultRoom(`방 ${rooms.length + 1}`);
-          newRoom.position = [rooms.length * 6, 0];
+          newRoom.position = findNonOverlappingPosition(rooms);
           addRoom(newRoom);
           setSelectedRoomId(newRoom.id);
         }}
