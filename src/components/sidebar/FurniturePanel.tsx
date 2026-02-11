@@ -45,7 +45,7 @@ export default function FurniturePanel() {
           ))}
         </div>
         <div style={{ marginBottom: 8, color: '#888' }}>회전 (rad)</div>
-        <div style={{ display: 'flex', gap: 6 }}>
+        <div style={{ display: 'flex', gap: 6, marginBottom: 12 }}>
           {rotLabels.map((label, i) => (
             <label key={label} style={{ flex: 1 }}>
               <span style={{ color: '#888', fontSize: 11 }}>{label}</span>
@@ -57,6 +57,38 @@ export default function FurniturePanel() {
                   const rot = [...item.rotation] as [number, number, number];
                   rot[i] = parseFloat(e.target.value) || 0;
                   updateFurniture(item.id, { rotation: rot });
+                }}
+                style={{
+                  width: '100%',
+                  padding: '4px 6px',
+                  background: '#222',
+                  border: '1px solid #444',
+                  borderRadius: 4,
+                  color: '#ddd',
+                  fontSize: 12,
+                }}
+              />
+            </label>
+          ))}
+        </div>
+        <div style={{ marginBottom: 8, color: '#888' }}>크기 (m)</div>
+        <div style={{ display: 'flex', gap: 6 }}>
+          {(['width', 'depth', 'height'] as const).map((key) => (
+            <label key={key} style={{ flex: 1 }}>
+              <span style={{ color: '#888', fontSize: 11 }}>
+                {key === 'width' ? 'W' : key === 'depth' ? 'D' : 'H'}
+              </span>
+              <input
+                type="number"
+                step={0.05}
+                min={0.1}
+                max={10}
+                value={Number(item.dimensions[key].toFixed(2))}
+                onChange={(e) => {
+                  const val = Math.min(10, Math.max(0.1, parseFloat(e.target.value) || 0.1));
+                  updateFurniture(item.id, {
+                    dimensions: { ...item.dimensions, [key]: val },
+                  });
                 }}
                 style={{
                   width: '100%',
