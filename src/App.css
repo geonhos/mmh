@@ -45,3 +45,29 @@ input[type='range']::-webkit-slider-thumb {
   background: #646cff;
   cursor: pointer;
 }
+
+.catalog-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 10px;
+  border: 1px solid #333;
+  border-radius: 8px;
+  background: #2a2a3e;
+  color: #ccc;
+  cursor: grab;
+  text-align: left;
+  font-size: 13px;
+  transition: border-color 0.15s;
+}
+
+.catalog-item:hover {
+  border-color: #646cff;
+}
+
+.catalog-swatch {
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  flex-shrink: 0;
+}
