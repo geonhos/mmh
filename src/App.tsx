@@ -1,35 +1,45 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
+import { useState } from 'react';
+import Sidebar from './components/layout/Sidebar';
+import Viewport from './components/layout/Viewport';
+import RoomConfigurator from './components/sidebar/RoomConfigurator';
+import Room from './components/scene/Room';
+import SceneLighting from './components/scene/SceneLighting';
+import CameraController, { type CameraPreset } from './components/scene/CameraController';
+import './App.css';
 
 function App() {
-  const [count, setCount] = useState(0)
+  const [cameraPreset, setCameraPreset] = useState<CameraPreset>('perspective');
 
   return (
-    <>
-      <div>
-        <a href="https://vite.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.tsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
-  )
+    <div className="app-layout">
+      <Sidebar>
+        <RoomConfigurator />
+        <section style={{ marginBottom: 24 }}>
+          <h3 style={{ fontSize: 14, marginBottom: 12, color: '#aaa' }}>카메라</h3>
+          <div style={{ display: 'flex', gap: 8 }}>
+            <button
+              className={`preset-btn ${cameraPreset === 'perspective' ? 'active' : ''}`}
+              onClick={() => setCameraPreset('perspective')}
+            >
+              3D 뷰
+            </button>
+            <button
+              className={`preset-btn ${cameraPreset === 'top' ? 'active' : ''}`}
+              onClick={() => setCameraPreset('top')}
+            >
+              탑 뷰
+            </button>
+          </div>
+        </section>
+      </Sidebar>
+      <Viewport>
+        <SceneLighting />
+        <Room />
+        <CameraController preset={cameraPreset} />
+        <gridHelper args={[20, 20, '#444', '#333']} />
+      </Viewport>
+    </div>
+  );
 }
 
-export default App
+export default App;
