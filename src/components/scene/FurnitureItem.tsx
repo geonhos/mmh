@@ -6,7 +6,7 @@ import { useThree } from '@react-three/fiber';
 import type { ThreeEvent } from '@react-three/fiber';
 import type { FurnitureInstance } from '../../types';
 import { useStore } from '../../store/useStore';
-import { GRID_SNAP_SIZE } from '../../utils/constants';
+import { GRID_SNAP_SIZE, WALL_SNAP_THRESHOLD } from '../../utils/constants';
 import FurnitureGeometry from './FurnitureGeometry';
 
 const snap = (v: number, grid: number) => Math.round(v / grid) * grid;
@@ -78,6 +78,16 @@ export default function FurnitureItem({ item, mode }: FurnitureItemProps) {
         if (snapEnabled) {
           x = snap(x, GRID_SNAP_SIZE);
           z = snap(z, GRID_SNAP_SIZE);
+        }
+
+        // Wall magnetic snap
+        if (snapEnabled && room) {
+          const maxX = room.dimensions.width / 2 - item.dimensions.width / 2;
+          const maxZ = room.dimensions.depth / 2 - item.dimensions.depth / 2;
+          if (maxX - x > 0 && maxX - x < WALL_SNAP_THRESHOLD) x = maxX;
+          else if (x + maxX > 0 && x + maxX < WALL_SNAP_THRESHOLD) x = -maxX;
+          if (maxZ - z > 0 && maxZ - z < WALL_SNAP_THRESHOLD) z = maxZ;
+          else if (z + maxZ > 0 && z + maxZ < WALL_SNAP_THRESHOLD) z = -maxZ;
         }
 
         // Room boundary clamping

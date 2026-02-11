@@ -6,7 +6,7 @@ import { useThree } from '@react-three/fiber';
 import type { ThreeEvent } from '@react-three/fiber';
 import type { RoomInstance } from '../../types';
 import { useStore } from '../../store/useStore';
-import { COLORS, GRID_SNAP_SIZE } from '../../utils/constants';
+import { COLORS, GRID_SNAP_SIZE, ROOM_SNAP_THRESHOLD } from '../../utils/constants';
 
 const _floorPlane = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0);
 const _intersection = new THREE.Vector3();
@@ -86,8 +86,52 @@ export default function Room({ room, isSelected, onSelect, children }: RoomProps
       const onUp = () => {
         if (!groupRef.current) return;
         draggingRef.current = false;
-        const x = groupRef.current.position.x;
-        const z = groupRef.current.position.z;
+        let x = groupRef.current.position.x;
+        let z = groupRef.current.position.z;
+
+        // Grid snap
+        if (snapEnabled) {
+          x = Math.round(x / GRID_SNAP_SIZE) * GRID_SNAP_SIZE;
+          z = Math.round(z / GRID_SNAP_SIZE) * GRID_SNAP_SIZE;
+        }
+
+        // Room-to-room magnetic snap
+        if (snapEnabled) {
+          const allRooms = useStore.getState().rooms;
+          const myHW = width / 2;
+          const myHD = depth / 2;
+          let bestSnapX: number | null = null;
+          let bestDistX = ROOM_SNAP_THRESHOLD;
+          let bestSnapZ: number | null = null;
+          let bestDistZ = ROOM_SNAP_THRESHOLD;
+
+          for (const other of allRooms) {
+            if (other.id === room.id) continue;
+            const oX = other.position[0];
+            const oZ = other.position[1];
+            const oHW = other.dimensions.width / 2;
+            const oHD = other.dimensions.depth / 2;
+
+            // My right edge → other left edge
+            const dRightLeft = Math.abs((x + myHW) - (oX - oHW));
+            if (dRightLeft < bestDistX) { bestDistX = dRightLeft; bestSnapX = oX - oHW - myHW; }
+            // My left edge → other right edge
+            const dLeftRight = Math.abs((x - myHW) - (oX + oHW));
+            if (dLeftRight < bestDistX) { bestDistX = dLeftRight; bestSnapX = oX + oHW + myHW; }
+
+            // My front edge → other back edge
+            const dFrontBack = Math.abs((z + myHD) - (oZ - oHD));
+            if (dFrontBack < bestDistZ) { bestDistZ = dFrontBack; bestSnapZ = oZ - oHD - myHD; }
+            // My back edge → other front edge
+            const dBackFront = Math.abs((z - myHD) - (oZ + oHD));
+            if (dBackFront < bestDistZ) { bestDistZ = dBackFront; bestSnapZ = oZ + oHD + myHD; }
+          }
+
+          if (bestSnapX !== null) x = bestSnapX;
+          if (bestSnapZ !== null) z = bestSnapZ;
+        }
+
+        groupRef.current.position.set(x, 0, z);
         updateRoom(room.id, { position: [x, z] });
         if (controls) (controls as THREE.EventDispatcher & { enabled: boolean }).enabled = true;
         gl.domElement.removeEventListener('pointermove', onMove);
@@ -97,7 +141,7 @@ export default function Room({ room, isSelected, onSelect, children }: RoomProps
       gl.domElement.addEventListener('pointermove', onMove);
       gl.domElement.addEventListener('pointerup', onUp);
     },
-    [isSelected, onSelect, controls, gl, camera, updateRoom, room.id],
+    [isSelected, onSelect, controls, gl, camera, updateRoom, room.id, snapEnabled, width, depth],
   );
 
   return (

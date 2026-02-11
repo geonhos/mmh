@@ -14,6 +14,8 @@ export const COLORS = {
 };
 
 export const GRID_SNAP_SIZE = 0.25;
+export const WALL_SNAP_THRESHOLD = 0.3;
+export const ROOM_SNAP_THRESHOLD = 0.5;
 
 export function createDefaultRoom(name: string): RoomInstance {
   return {
