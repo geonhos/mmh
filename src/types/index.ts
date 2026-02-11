@@ -4,6 +4,13 @@ export interface RoomConfig {
   height: number;
 }
 
+export interface RoomInstance {
+  id: string;
+  name: string;
+  dimensions: RoomConfig;
+  position: [number, number];
+}
+
 export interface FurnitureCatalogItem {
   id: string;
   name: string;
@@ -15,6 +22,7 @@ export interface FurnitureCatalogItem {
 export interface FurnitureInstance {
   id: string;
   catalogId: string;
+  roomId: string;
   position: [number, number, number];
   rotation: [number, number, number];
   name: string;
