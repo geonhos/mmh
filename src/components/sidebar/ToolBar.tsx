@@ -9,7 +9,7 @@ interface ToolBarProps {
 }
 
 export default function ToolBar({ mode, onModeChange, cameraPreset, onCameraChange }: ToolBarProps) {
-  const selectedId = useStore((s) => s.selectedId);
+  const selectedFurnitureId = useStore((s) => s.selectedFurnitureId);
   const removeFurniture = useStore((s) => s.removeFurniture);
   const save = useStore((s) => s.save);
   const load = useStore((s) => s.load);
@@ -45,11 +45,11 @@ export default function ToolBar({ mode, onModeChange, cameraPreset, onCameraChan
           탑 뷰
         </button>
       </div>
-      {selectedId && (
+      {selectedFurnitureId && (
         <button
           className="preset-btn"
           style={{ width: '100%', color: '#ff6b6b', marginBottom: 10 }}
-          onClick={() => removeFurniture(selectedId)}
+          onClick={() => removeFurniture(selectedFurnitureId)}
         >
           삭제 (Del)
         </button>

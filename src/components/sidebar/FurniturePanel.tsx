@@ -1,11 +1,11 @@
 import { useStore } from '../../store/useStore';
 
 export default function FurniturePanel() {
-  const selectedId = useStore((s) => s.selectedId);
+  const selectedFurnitureId = useStore((s) => s.selectedFurnitureId);
   const furnitureList = useStore((s) => s.furnitureList);
   const updateFurniture = useStore((s) => s.updateFurniture);
 
-  const item = furnitureList.find((f) => f.id === selectedId);
+  const item = furnitureList.find((f) => f.id === selectedFurnitureId);
   if (!item) return null;
 
   const posLabels = ['X', 'Y', 'Z'] as const;

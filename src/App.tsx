@@ -16,8 +16,11 @@ import './App.css';
 function App() {
   const [cameraPreset, setCameraPreset] = useState<CameraPreset>('perspective');
   const [transformMode, setTransformMode] = useState<'translate' | 'rotate'>('translate');
+  const rooms = useStore((s) => s.rooms);
   const furnitureList = useStore((s) => s.furnitureList);
-  const setSelectedId = useStore((s) => s.setSelectedId);
+  const selectedRoomId = useStore((s) => s.selectedRoomId);
+  const setSelectedRoomId = useStore((s) => s.setSelectedRoomId);
+  const setSelectedFurnitureId = useStore((s) => s.setSelectedFurnitureId);
 
   const toggleMode = useCallback(() => {
     setTransformMode((m) => (m === 'translate' ? 'rotate' : 'translate'));
@@ -40,9 +43,19 @@ function App() {
       </Sidebar>
       <Viewport>
         <SceneLighting />
-        <Room />
-        {furnitureList.map((item) => (
-          <FurnitureItem key={item.id} item={item} mode={transformMode} />
+        {rooms.map((room) => (
+          <Room
+            key={room.id}
+            room={room}
+            isSelected={room.id === selectedRoomId}
+            onSelect={() => setSelectedRoomId(room.id)}
+          >
+            {furnitureList
+              .filter((f) => f.roomId === room.id)
+              .map((item) => (
+                <FurnitureItem key={item.id} item={item} mode={transformMode} />
+              ))}
+          </Room>
         ))}
         <CameraController preset={cameraPreset} />
         <gridHelper args={[20, 20, '#444', '#333']} />
@@ -50,7 +63,7 @@ function App() {
           rotation-x={-Math.PI / 2}
           position={[0, -0.01, 0]}
           visible={false}
-          onClick={() => setSelectedId(null)}
+          onClick={() => setSelectedFurnitureId(null)}
         >
           <planeGeometry args={[50, 50]} />
         </mesh>

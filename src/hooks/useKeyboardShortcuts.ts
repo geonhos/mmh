@@ -7,8 +7,8 @@ interface KeyboardShortcutsOptions {
 
 export function useKeyboardShortcuts({ onToggleMode }: KeyboardShortcutsOptions) {
   const removeFurniture = useStore((s) => s.removeFurniture);
-  const setSelectedId = useStore((s) => s.setSelectedId);
-  const selectedId = useStore((s) => s.selectedId);
+  const setSelectedFurnitureId = useStore((s) => s.setSelectedFurnitureId);
+  const selectedFurnitureId = useStore((s) => s.selectedFurnitureId);
   const updateFurniture = useStore((s) => s.updateFurniture);
   const furnitureList = useStore((s) => s.furnitureList);
 
@@ -20,10 +20,10 @@ export function useKeyboardShortcuts({ onToggleMode }: KeyboardShortcutsOptions)
       switch (e.key) {
         case 'r':
         case 'R':
-          if (selectedId) {
-            const item = furnitureList.find((f) => f.id === selectedId);
+          if (selectedFurnitureId) {
+            const item = furnitureList.find((f) => f.id === selectedFurnitureId);
             if (item) {
-              updateFurniture(selectedId, {
+              updateFurniture(selectedFurnitureId, {
                 rotation: [item.rotation[0], item.rotation[1] + Math.PI / 2, item.rotation[2]],
               });
             }
@@ -37,17 +37,17 @@ export function useKeyboardShortcuts({ onToggleMode }: KeyboardShortcutsOptions)
           break;
         case 'Delete':
         case 'Backspace':
-          if (selectedId) {
-            removeFurniture(selectedId);
+          if (selectedFurnitureId) {
+            removeFurniture(selectedFurnitureId);
           }
           break;
         case 'Escape':
-          setSelectedId(null);
+          setSelectedFurnitureId(null);
           break;
       }
     };
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [selectedId, furnitureList, removeFurniture, setSelectedId, updateFurniture, onToggleMode]);
+  }, [selectedFurnitureId, furnitureList, removeFurniture, setSelectedFurnitureId, updateFurniture, onToggleMode]);
 }

@@ -1,17 +1,41 @@
-import { useStore } from '../../store/useStore';
+import type { ReactNode } from 'react';
+import type { RoomInstance } from '../../types';
 import { COLORS } from '../../utils/constants';
 
-export default function Room() {
-  const { width, depth, height } = useStore((s) => s.room);
+interface RoomProps {
+  room: RoomInstance;
+  isSelected: boolean;
+  onSelect: () => void;
+  children?: ReactNode;
+}
+
+export default function Room({ room, isSelected, onSelect, children }: RoomProps) {
+  const { width, depth, height } = room.dimensions;
   const wallThickness = 0.08;
 
   return (
-    <group>
+    <group position={[room.position[0], 0, room.position[1]]}>
       {/* Floor */}
-      <mesh rotation-x={-Math.PI / 2} position={[0, 0, 0]} receiveShadow>
+      <mesh
+        rotation-x={-Math.PI / 2}
+        position={[0, 0, 0]}
+        receiveShadow
+        onClick={(e) => {
+          e.stopPropagation();
+          onSelect();
+        }}
+      >
         <planeGeometry args={[width, depth]} />
         <meshStandardMaterial color={COLORS.floor} />
       </mesh>
+
+      {/* Selection outline on floor */}
+      {isSelected && (
+        <mesh rotation-x={-Math.PI / 2} position={[0, 0.005, 0]}>
+          <planeGeometry args={[width + 0.1, depth + 0.1]} />
+          <meshBasicMaterial color="#646cff" wireframe />
+        </mesh>
+      )}
 
       {/* Back wall (z = -depth/2) */}
       <mesh position={[0, height / 2, -depth / 2]}>
@@ -52,6 +76,8 @@ export default function Room() {
           opacity={COLORS.wallOpacity}
         />
       </mesh>
+
+      {children}
     </group>
   );
 }

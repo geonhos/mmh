@@ -4,13 +4,15 @@ import { generateId } from '../../utils/ids';
 
 export default function FurnitureCatalog() {
   const addFurniture = useStore((s) => s.addFurniture);
+  const selectedRoomId = useStore((s) => s.selectedRoomId);
 
   const handleAdd = (catalogId: string) => {
     const item = furnitureCatalog.find((c) => c.id === catalogId);
-    if (!item) return;
+    if (!item || !selectedRoomId) return;
     addFurniture({
       id: generateId(),
       catalogId: item.id,
+      roomId: selectedRoomId,
       position: [0, 0, 0],
       rotation: [0, 0, 0],
       name: item.name,

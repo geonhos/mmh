@@ -12,10 +12,10 @@ interface FurnitureItemProps {
 
 export default function FurnitureItem({ item, mode }: FurnitureItemProps) {
   const groupRef = useRef<Group>(null);
-  const selectedId = useStore((s) => s.selectedId);
-  const setSelectedId = useStore((s) => s.setSelectedId);
+  const selectedFurnitureId = useStore((s) => s.selectedFurnitureId);
+  const setSelectedFurnitureId = useStore((s) => s.setSelectedFurnitureId);
   const updateFurniture = useStore((s) => s.updateFurniture);
-  const isSelected = selectedId === item.id;
+  const isSelected = selectedFurnitureId === item.id;
 
   const handleChange = () => {
     const obj = groupRef.current;
@@ -34,7 +34,7 @@ export default function FurnitureItem({ item, mode }: FurnitureItemProps) {
         rotation={item.rotation}
         onClick={(e) => {
           e.stopPropagation();
-          setSelectedId(item.id);
+          setSelectedFurnitureId(item.id);
         }}
       >
         <FurnitureGeometry

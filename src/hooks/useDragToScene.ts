@@ -7,6 +7,20 @@ import { generateId } from '../utils/ids';
 
 const floorPlane = new Plane(new Vector3(0, 1, 0), 0);
 
+function findTargetRoom(worldX: number, worldZ: number) {
+  const rooms = useStore.getState().rooms;
+  for (const room of rooms) {
+    const rx = room.position[0];
+    const rz = room.position[1];
+    const hw = room.dimensions.width / 2;
+    const hd = room.dimensions.depth / 2;
+    if (worldX >= rx - hw && worldX <= rx + hw && worldZ >= rz - hd && worldZ <= rz + hd) {
+      return room;
+    }
+  }
+  return null;
+}
+
 export function useDragToScene(containerRef: React.RefObject<HTMLDivElement | null>) {
   const addFurniture = useStore((s) => s.addFurniture);
   const addRef = useRef(addFurniture);
@@ -45,10 +59,38 @@ export function useDragToScene(containerRef: React.RefObject<HTMLDivElement | nu
       const hit = raycaster.ray.intersectPlane(floorPlane, intersect);
       if (!hit) return;
 
+      const targetRoom = findTargetRoom(intersect.x, intersect.z);
+      if (!targetRoom) {
+        // Fall back to selected room
+        const state = useStore.getState();
+        const fallback = state.rooms.find((r) => r.id === state.selectedRoomId);
+        if (!fallback) return;
+
+        const localX = intersect.x - fallback.position[0];
+        const localZ = intersect.z - fallback.position[1];
+
+        addRef.current({
+          id: generateId(),
+          catalogId: catalogItem.id,
+          roomId: fallback.id,
+          position: [localX, 0, localZ],
+          rotation: [0, 0, 0],
+          name: catalogItem.name,
+          dimensions: { ...catalogItem.dimensions },
+          color: catalogItem.color,
+        });
+        return;
+      }
+
+      // Convert world coords to room-local coords
+      const localX = intersect.x - targetRoom.position[0];
+      const localZ = intersect.z - targetRoom.position[1];
+
       addRef.current({
         id: generateId(),
         catalogId: catalogItem.id,
-        position: [intersect.x, 0, intersect.z],
+        roomId: targetRoom.id,
+        position: [localX, 0, localZ],
         rotation: [0, 0, 0],
         name: catalogItem.name,
         dimensions: { ...catalogItem.dimensions },
