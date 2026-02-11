@@ -1,3 +1,4 @@
+import { useRef } from 'react';
 import { useStore } from '../../store/useStore';
 import type { CameraPreset } from '../scene/CameraController';
 
@@ -13,8 +14,9 @@ export default function ToolBar({ mode, onModeChange, cameraPreset, onCameraChan
   const removeFurniture = useStore((s) => s.removeFurniture);
   const snapEnabled = useStore((s) => s.snapEnabled);
   const setSnapEnabled = useStore((s) => s.setSnapEnabled);
-  const save = useStore((s) => s.save);
-  const load = useStore((s) => s.load);
+  const exportToFile = useStore((s) => s.exportToFile);
+  const importFromFile = useStore((s) => s.importFromFile);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   return (
     <section style={{ marginBottom: 24 }}>
@@ -66,12 +68,26 @@ export default function ToolBar({ mode, onModeChange, cameraPreset, onCameraChan
         </button>
       )}
       <div style={{ display: 'flex', gap: 6 }}>
-        <button className="preset-btn" style={{ flex: 1 }} onClick={save}>
+        <button className="preset-btn" style={{ flex: 1 }} onClick={exportToFile}>
           저장
         </button>
-        <button className="preset-btn" style={{ flex: 1 }} onClick={load}>
+        <button className="preset-btn" style={{ flex: 1 }} onClick={() => fileInputRef.current?.click()}>
           불러오기
         </button>
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept=".json"
+          style={{ display: 'none' }}
+          onChange={(e) => {
+            const file = e.target.files?.[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = () => importFromFile(reader.result as string);
+            reader.readAsText(file);
+            e.target.value = '';
+          }}
+        />
       </div>
     </section>
   );

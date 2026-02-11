@@ -9,6 +9,7 @@ export interface RoomInstance {
   name: string;
   dimensions: RoomConfig;
   position: [number, number];
+  locked?: boolean;
 }
 
 export interface FurnitureCatalogItem {
@@ -28,4 +29,5 @@ export interface FurnitureInstance {
   name: string;
   dimensions: { width: number; depth: number; height: number };
   color: string;
+  locked?: boolean;
 }

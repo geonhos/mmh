@@ -2,7 +2,6 @@ import { create } from 'zustand';
 import type { RoomConfig, RoomInstance, FurnitureInstance } from '../types';
 import { createDefaultRoom } from '../utils/constants';
 
-const STORAGE_KEY = 'my-model-house-save';
 const SAVE_VERSION = 2;
 
 interface SaveDataV1 {
@@ -68,8 +67,8 @@ interface AppState {
   setSnapEnabled: (enabled: boolean) => void;
 
   // Persistence
-  save: () => void;
-  load: () => void;
+  exportToFile: () => void;
+  importFromFile: (json: string) => void;
 }
 
 export const useStore = create<AppState>((set) => ({
@@ -120,16 +119,20 @@ export const useStore = create<AppState>((set) => ({
 
   setSnapEnabled: (enabled) => set({ snapEnabled: enabled }),
 
-  save: () => {
+  exportToFile: () => {
     const { rooms, furnitureList } = useStore.getState();
     const data: SaveData = { version: SAVE_VERSION, rooms, furnitureList };
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'my-model-house.json';
+    a.click();
+    URL.revokeObjectURL(url);
   },
 
-  load: () => {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if (!raw) return;
-    const data = parseSaveData(raw);
+  importFromFile: (json: string) => {
+    const data = parseSaveData(json);
     if (!data) return;
     set({
       rooms: data.rooms,
