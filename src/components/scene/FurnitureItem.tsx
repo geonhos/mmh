@@ -96,9 +96,15 @@ export default function FurnitureItem({ item }: FurnitureItemProps) {
           z = snap(z, GRID_SNAP_SIZE);
         }
 
+        // Account for rotation: swap width/depth at 90°/270°
+        const yRot = ((item.rotation[1] % Math.PI) + Math.PI) % Math.PI;
+        const isRotated = Math.abs(yRot - Math.PI / 2) < 0.01;
+        const fw = isRotated ? item.dimensions.depth : item.dimensions.width;
+        const fd = isRotated ? item.dimensions.width : item.dimensions.depth;
+
         // Wall magnetic snap
-        const maxX = targetRoom.dimensions.width / 2 - item.dimensions.width / 2;
-        const maxZ = targetRoom.dimensions.depth / 2 - item.dimensions.depth / 2;
+        const maxX = targetRoom.dimensions.width / 2 - fw / 2;
+        const maxZ = targetRoom.dimensions.depth / 2 - fd / 2;
         if (snapEnabled) {
           if (maxX - x > 0 && maxX - x < WALL_SNAP_THRESHOLD) x = maxX;
           else if (x + maxX > 0 && x + maxX < WALL_SNAP_THRESHOLD) x = -maxX;
