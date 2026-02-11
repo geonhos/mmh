@@ -151,6 +151,16 @@ export default function RoomConfigurator() {
             </div>
           ))}
 
+          <div style={{ marginBottom: 10 }}>
+            <button
+              className={`preset-btn ${selectedRoom.locked ? 'active' : ''}`}
+              style={{ width: '100%' }}
+              onClick={() => updateRoom(selectedRoom.id, { locked: !selectedRoom.locked })}
+            >
+              이동 {selectedRoom.locked ? '잠금' : '해제'}
+            </button>
+          </div>
+
           <div style={{ marginBottom: 8, color: '#888', fontSize: 12 }}>방 위치</div>
           <div style={{ display: 'flex', gap: 6 }}>
             {posFields.map(({ label, key, min, max }) => (

@@ -56,7 +56,7 @@ export default function FurnitureItem({ item, mode }: FurnitureItemProps) {
 
   const handlePointerDown = useCallback(
     (e: ThreeEvent<PointerEvent>) => {
-      if (mode !== 'translate' || !isSelected) return;
+      if (mode !== 'translate' || !isSelected || item.locked) return;
       e.stopPropagation();
       draggingRef.current = true;
       if (controls) (controls as THREE.EventDispatcher & { enabled: boolean }).enabled = false;

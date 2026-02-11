@@ -16,6 +16,15 @@ export default function FurniturePanel() {
       <h3 style={{ fontSize: 14, marginBottom: 12, color: '#aaa' }}>
         {item.name} 속성
       </h3>
+      <div style={{ marginBottom: 10 }}>
+        <button
+          className={`preset-btn ${item.locked ? 'active' : ''}`}
+          style={{ width: '100%' }}
+          onClick={() => updateFurniture(item.id, { locked: !item.locked })}
+        >
+          이동 {item.locked ? '잠금' : '해제'}
+        </button>
+      </div>
       <div style={{ fontSize: 12 }}>
         <div style={{ marginBottom: 8, color: '#888' }}>위치 (m)</div>
         <div style={{ display: 'flex', gap: 6, marginBottom: 12 }}>

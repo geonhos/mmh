@@ -67,6 +67,9 @@ export default function Room({ room, isSelected, onSelect, children }: RoomProps
         return;
       }
 
+      // Prevent dragging when locked
+      if (room.locked) return;
+
       draggingRef.current = true;
       if (controls) (controls as THREE.EventDispatcher & { enabled: boolean }).enabled = false;
 
