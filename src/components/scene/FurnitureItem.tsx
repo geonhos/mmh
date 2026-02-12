@@ -8,6 +8,7 @@ import { useStore } from '../../store/useStore';
 import { GRID_SNAP_SIZE, WALL_SNAP_THRESHOLD } from '../../utils/constants';
 import { checkCollisions } from '../../utils/collision';
 import FurnitureGeometry from './FurnitureGeometry';
+import DimensionLabel from './DimensionLabel';
 
 const snap = (v: number, grid: number) => Math.round(v / grid) * grid;
 
@@ -176,16 +177,30 @@ export default function FurnitureItem({ item }: FurnitureItemProps) {
         color={item.color}
       />
       {isSelected && (
-        <mesh position={[0, item.dimensions.height / 2, 0]}>
-          <boxGeometry
-            args={[
-              item.dimensions.width + 0.05,
-              item.dimensions.height + 0.05,
-              item.dimensions.depth + 0.05,
-            ]}
+        <>
+          <mesh position={[0, item.dimensions.height / 2, 0]}>
+            <boxGeometry
+              args={[
+                item.dimensions.width + 0.05,
+                item.dimensions.height + 0.05,
+                item.dimensions.depth + 0.05,
+              ]}
+            />
+            <meshBasicMaterial color="#646cff" wireframe />
+          </mesh>
+          <DimensionLabel
+            position={[0, item.dimensions.height + 0.3, 0]}
+            text={`${item.dimensions.width.toFixed(1)} × ${item.dimensions.depth.toFixed(1)} × ${item.dimensions.height.toFixed(1)}m`}
           />
-          <meshBasicMaterial color="#646cff" wireframe />
-        </mesh>
+          <DimensionLabel
+            position={[0, 0.05, item.dimensions.depth / 2 + 0.2]}
+            text={`${item.dimensions.width.toFixed(2)}m`}
+          />
+          <DimensionLabel
+            position={[item.dimensions.width / 2 + 0.2, 0.05, 0]}
+            text={`${item.dimensions.depth.toFixed(2)}m`}
+          />
+        </>
       )}
       {isColliding && draggingRef.current && (
         <mesh position={[0, item.dimensions.height / 2, 0]}>

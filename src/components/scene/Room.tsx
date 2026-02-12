@@ -7,6 +7,7 @@ import type { ThreeEvent } from '@react-three/fiber';
 import type { RoomInstance } from '../../types';
 import { useStore } from '../../store/useStore';
 import { COLORS, GRID_SNAP_SIZE, ROOM_SNAP_THRESHOLD } from '../../utils/constants';
+import DimensionLabel from './DimensionLabel';
 
 const _floorPlane = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0);
 const _intersection = new THREE.Vector3();
@@ -174,12 +175,26 @@ export default function Room({ room, isSelected, onSelect, children }: RoomProps
       {/* Floor grid (visible when snap is on) */}
       {snapEnabled && <FloorGrid width={width} depth={depth} />}
 
-      {/* Selection outline on floor */}
+      {/* Selection outline on floor + dimension labels */}
       {isSelected && (
-        <mesh rotation-x={-Math.PI / 2} position={[0, 0.005, 0]}>
-          <planeGeometry args={[width + 0.1, depth + 0.1]} />
-          <meshBasicMaterial color="#646cff" wireframe />
-        </mesh>
+        <>
+          <mesh rotation-x={-Math.PI / 2} position={[0, 0.005, 0]}>
+            <planeGeometry args={[width + 0.1, depth + 0.1]} />
+            <meshBasicMaterial color="#646cff" wireframe />
+          </mesh>
+          <DimensionLabel
+            position={[0, height + 0.3, 0]}
+            text={`${width.toFixed(1)} × ${depth.toFixed(1)} × ${height.toFixed(1)}m`}
+          />
+          <DimensionLabel
+            position={[0, 0.1, depth / 2 + 0.3]}
+            text={`${width.toFixed(1)}m`}
+          />
+          <DimensionLabel
+            position={[width / 2 + 0.3, 0.1, 0]}
+            text={`${depth.toFixed(1)}m`}
+          />
+        </>
       )}
 
       {/* Back wall (z = -depth/2) */}
