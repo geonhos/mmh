@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import { persist } from 'zustand/middleware';
 import type { RoomConfig, RoomInstance, FurnitureInstance } from '../types';
 import { createDefaultRoom } from '../utils/constants';
 
@@ -92,103 +93,132 @@ function pushHistory(state: AppState): Snapshot[] {
   return history;
 }
 
-export const useStore = create<AppState>((set) => ({
-  rooms: [initialRoom],
-  selectedRoomId: initialRoom.id,
-  furnitureList: [],
-  selectedFurnitureId: null,
-  snapEnabled: true,
-  _history: [],
-
-  undo: () =>
-    set((state) => {
-      if (state._history.length === 0) return state;
-      const history = [...state._history];
-      const snapshot = history.pop()!;
-      return {
-        ...snapshot,
-        _history: history,
-        selectedRoomId: snapshot.rooms.find((r) => r.id === state.selectedRoomId)
-          ? state.selectedRoomId
-          : snapshot.rooms[0]?.id ?? null,
-        selectedFurnitureId: snapshot.furnitureList.find((f) => f.id === state.selectedFurnitureId)
-          ? state.selectedFurnitureId
-          : null,
-      };
-    }),
-
-  addRoom: (room) =>
-    set((state) => ({
-      _history: pushHistory(state),
-      rooms: [...state.rooms, room],
-    })),
-
-  updateRoom: (id, updates) =>
-    set((state) => ({
-      _history: pushHistory(state),
-      rooms: state.rooms.map((r) =>
-        r.id === id ? { ...r, ...updates } : r
-      ),
-    })),
-
-  removeRoom: (id) =>
-    set((state) => ({
-      _history: pushHistory(state),
-      rooms: state.rooms.filter((r) => r.id !== id),
-      furnitureList: state.furnitureList.filter((f) => f.roomId !== id),
-      selectedRoomId: state.selectedRoomId === id
-        ? (state.rooms.find((r) => r.id !== id)?.id ?? null)
-        : state.selectedRoomId,
-    })),
-
-  setSelectedRoomId: (id) => set({ selectedRoomId: id }),
-
-  addFurniture: (item) =>
-    set((state) => ({
-      _history: pushHistory(state),
-      furnitureList: [...state.furnitureList, item],
-    })),
-
-  updateFurniture: (id, updates) =>
-    set((state) => ({
-      _history: pushHistory(state),
-      furnitureList: state.furnitureList.map((f) =>
-        f.id === id ? { ...f, ...updates } : f
-      ),
-    })),
-
-  removeFurniture: (id) =>
-    set((state) => ({
-      _history: pushHistory(state),
-      furnitureList: state.furnitureList.filter((f) => f.id !== id),
-      selectedFurnitureId: state.selectedFurnitureId === id ? null : state.selectedFurnitureId,
-    })),
-
-  setSelectedFurnitureId: (id) => set({ selectedFurnitureId: id }),
-
-  setSnapEnabled: (enabled) => set({ snapEnabled: enabled }),
-
-  exportToFile: () => {
-    const { rooms, furnitureList } = useStore.getState();
-    const data: SaveData = { version: SAVE_VERSION, rooms, furnitureList };
-    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = 'my-model-house.json';
-    a.click();
-    URL.revokeObjectURL(url);
-  },
-
-  importFromFile: (json: string) => {
-    const data = parseSaveData(json);
-    if (!data) return;
-    set((state) => ({
-      _history: pushHistory(state),
-      rooms: data.rooms,
-      furnitureList: data.furnitureList,
-      selectedRoomId: data.rooms[0]?.id ?? null,
+export const useStore = create<AppState>()(
+  persist(
+    (set) => ({
+      rooms: [initialRoom],
+      selectedRoomId: initialRoom.id,
+      furnitureList: [],
       selectedFurnitureId: null,
-    }));
-  },
-}));
+      snapEnabled: true,
+      _history: [],
+
+      undo: () =>
+        set((state) => {
+          if (state._history.length === 0) return state;
+          const history = [...state._history];
+          const snapshot = history.pop()!;
+          return {
+            ...snapshot,
+            _history: history,
+            selectedRoomId: snapshot.rooms.find((r) => r.id === state.selectedRoomId)
+              ? state.selectedRoomId
+              : snapshot.rooms[0]?.id ?? null,
+            selectedFurnitureId: snapshot.furnitureList.find((f) => f.id === state.selectedFurnitureId)
+              ? state.selectedFurnitureId
+              : null,
+          };
+        }),
+
+      addRoom: (room) =>
+        set((state) => ({
+          _history: pushHistory(state),
+          rooms: [...state.rooms, room],
+        })),
+
+      updateRoom: (id, updates) =>
+        set((state) => ({
+          _history: pushHistory(state),
+          rooms: state.rooms.map((r) =>
+            r.id === id ? { ...r, ...updates } : r
+          ),
+        })),
+
+      removeRoom: (id) =>
+        set((state) => ({
+          _history: pushHistory(state),
+          rooms: state.rooms.filter((r) => r.id !== id),
+          furnitureList: state.furnitureList.filter((f) => f.roomId !== id),
+          selectedRoomId: state.selectedRoomId === id
+            ? (state.rooms.find((r) => r.id !== id)?.id ?? null)
+            : state.selectedRoomId,
+        })),
+
+      setSelectedRoomId: (id) => set({ selectedRoomId: id }),
+
+      addFurniture: (item) =>
+        set((state) => ({
+          _history: pushHistory(state),
+          furnitureList: [...state.furnitureList, item],
+        })),
+
+      updateFurniture: (id, updates) =>
+        set((state) => ({
+          _history: pushHistory(state),
+          furnitureList: state.furnitureList.map((f) =>
+            f.id === id ? { ...f, ...updates } : f
+          ),
+        })),
+
+      removeFurniture: (id) =>
+        set((state) => ({
+          _history: pushHistory(state),
+          furnitureList: state.furnitureList.filter((f) => f.id !== id),
+          selectedFurnitureId: state.selectedFurnitureId === id ? null : state.selectedFurnitureId,
+        })),
+
+      setSelectedFurnitureId: (id) => set({ selectedFurnitureId: id }),
+
+      setSnapEnabled: (enabled) => set({ snapEnabled: enabled }),
+
+      exportToFile: () => {
+        const { rooms, furnitureList } = useStore.getState();
+        const data: SaveData = { version: SAVE_VERSION, rooms, furnitureList };
+        const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'my-model-house.json';
+        a.click();
+        URL.revokeObjectURL(url);
+      },
+
+      importFromFile: (json: string) => {
+        const data = parseSaveData(json);
+        if (!data) return;
+        set((state) => ({
+          _history: pushHistory(state),
+          rooms: data.rooms,
+          furnitureList: data.furnitureList,
+          selectedRoomId: data.rooms[0]?.id ?? null,
+          selectedFurnitureId: null,
+        }));
+      },
+    }),
+    {
+      name: 'my-model-house-storage',
+      version: SAVE_VERSION,
+      partialize: (state) => ({
+        rooms: state.rooms,
+        furnitureList: state.furnitureList,
+        selectedRoomId: state.selectedRoomId,
+        snapEnabled: state.snapEnabled,
+      }),
+      migrate: (persistedState: unknown, version: number) => {
+        if (version < 2) {
+          const raw = persistedState as Record<string, unknown>;
+          if (raw.room && raw.furnitureList) {
+            const migrated = migrateV1toV2(raw as unknown as SaveDataV1);
+            return {
+              rooms: migrated.rooms,
+              furnitureList: migrated.furnitureList,
+              selectedRoomId: migrated.rooms[0]?.id ?? null,
+              snapEnabled: true,
+            };
+          }
+        }
+        return persistedState as Record<string, unknown>;
+      },
+    }
+  )
+);
