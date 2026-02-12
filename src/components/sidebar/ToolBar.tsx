@@ -24,7 +24,11 @@ export default function ToolBar({ cameraPreset, onCameraChange, onShowShortcuts 
   const setSnapEnabled = useStore((s) => s.setSnapEnabled);
   const exportToFile = useStore((s) => s.exportToFile);
   const importFromFile = useStore((s) => s.importFromFile);
+  const floorPlan = useStore((s) => s.floorPlan);
+  const setFloorPlan = useStore((s) => s.setFloorPlan);
+  const updateFloorPlan = useStore((s) => s.updateFloorPlan);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const floorPlanInputRef = useRef<HTMLInputElement>(null);
 
   const selectedItem = furnitureList.find((f) => f.id === selectedFurnitureId);
 
@@ -122,6 +126,70 @@ export default function ToolBar({ cameraPreset, onCameraChange, onShowShortcuts 
           ? 단축키
         </button>
       </div>
+
+      {/* Floor plan */}
+      <h3 style={{ fontSize: 14, marginBottom: 8, color: '#aaa' }}>도면</h3>
+      <button className="preset-btn" style={{ width: '100%', marginBottom: 6 }}
+        onClick={() => floorPlanInputRef.current?.click()}>
+        도면 이미지 불러오기
+      </button>
+      <input
+        ref={floorPlanInputRef}
+        type="file"
+        accept="image/*"
+        style={{ display: 'none' }}
+        onChange={(e) => {
+          const file = e.target.files?.[0];
+          if (!file) return;
+          const reader = new FileReader();
+          reader.onload = () => {
+            const img = new Image();
+            img.onload = () => {
+              const defaultWidth = 10;
+              const aspect = img.height / img.width;
+              setFloorPlan({
+                dataUrl: reader.result as string,
+                scale: 1,
+                position: [0, 0],
+                opacity: 0.5,
+                width: defaultWidth,
+                height: defaultWidth * aspect,
+              });
+            };
+            img.src = reader.result as string;
+          };
+          reader.readAsDataURL(file);
+          e.target.value = '';
+        }}
+      />
+      {floorPlan && (
+        <div style={{ marginBottom: 10 }}>
+          <label style={{ fontSize: 12, color: '#888', display: 'block', marginBottom: 4 }}>
+            크기 (가로 {floorPlan.width.toFixed(1)}m)
+            <input type="range" min={2} max={30} step={0.5}
+              value={floorPlan.width}
+              onChange={(e) => {
+                const w = parseFloat(e.target.value);
+                const aspect = floorPlan.height / floorPlan.width;
+                updateFloorPlan({ width: w, height: w * aspect });
+              }}
+              style={{ width: '100%' }}
+            />
+          </label>
+          <label style={{ fontSize: 12, color: '#888', display: 'block', marginBottom: 4 }}>
+            투명도 ({(floorPlan.opacity * 100).toFixed(0)}%)
+            <input type="range" min={0.1} max={1} step={0.1}
+              value={floorPlan.opacity}
+              onChange={(e) => updateFloorPlan({ opacity: parseFloat(e.target.value) })}
+              style={{ width: '100%' }}
+            />
+          </label>
+          <button className="preset-btn" style={{ width: '100%', color: '#ff6b6b' }}
+            onClick={() => setFloorPlan(null)}>
+            도면 제거
+          </button>
+        </div>
+      )}
 
       {/* File */}
       <h3 style={{ fontSize: 14, marginBottom: 8, color: '#aaa' }}>파일</h3>

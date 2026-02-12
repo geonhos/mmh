@@ -13,6 +13,7 @@ import Room from './components/scene/Room';
 import SceneLighting from './components/scene/SceneLighting';
 import CameraController, { type CameraPreset } from './components/scene/CameraController';
 import FurnitureItem from './components/scene/FurnitureItem';
+import FloorPlanOverlay from './components/scene/FloorPlanOverlay';
 import { useStore } from './store/useStore';
 import { useKeyboardShortcuts } from './hooks/useKeyboardShortcuts';
 import { decodeStateFromHash } from './utils/sharing';
@@ -61,6 +62,7 @@ function App() {
       </Sidebar>
       <Viewport>
         <SceneLighting />
+        <FloorPlanOverlay />
         {rooms.map((room) => (
           <Room
             key={room.id}

@@ -23,6 +23,15 @@ export interface FurnitureCatalogItem {
   materialType?: MaterialType;
 }
 
+export interface FloorPlanConfig {
+  dataUrl: string;
+  scale: number;
+  position: [number, number];
+  opacity: number;
+  width: number;
+  height: number;
+}
+
 export interface FurnitureInstance {
   id: string;
   catalogId: string;

@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import type { RoomConfig, RoomInstance, FurnitureInstance } from '../types';
+import type { RoomConfig, RoomInstance, FurnitureInstance, FloorPlanConfig } from '../types';
 import { createDefaultRoom } from '../utils/constants';
 import { generateId } from '../utils/ids';
 
@@ -85,6 +85,11 @@ interface AppState {
   // Context menu
   contextMenu: { x: number; y: number; targetId: string; targetType: 'furniture' | 'room' } | null;
   setContextMenu: (menu: AppState['contextMenu']) => void;
+
+  // Floor plan
+  floorPlan: FloorPlanConfig | null;
+  setFloorPlan: (config: FloorPlanConfig | null) => void;
+  updateFloorPlan: (updates: Partial<FloorPlanConfig>) => void;
 
   // Persistence
   exportToFile: () => void;
@@ -229,6 +234,13 @@ export const useStore = create<AppState>()(
       contextMenu: null,
       setContextMenu: (menu) => set({ contextMenu: menu }),
 
+      floorPlan: null,
+      setFloorPlan: (config) => set({ floorPlan: config }),
+      updateFloorPlan: (updates) =>
+        set((state) => ({
+          floorPlan: state.floorPlan ? { ...state.floorPlan, ...updates } : null,
+        })),
+
       exportToFile: () => {
         const { rooms, furnitureList } = useStore.getState();
         const data: SaveData = { version: SAVE_VERSION, rooms, furnitureList };
@@ -261,6 +273,7 @@ export const useStore = create<AppState>()(
         furnitureList: state.furnitureList,
         selectedRoomId: state.selectedRoomId,
         snapEnabled: state.snapEnabled,
+        floorPlan: state.floorPlan,
       }),
       migrate: (persistedState: unknown, version: number) => {
         if (version < 2) {
