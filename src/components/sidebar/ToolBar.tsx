@@ -111,6 +111,12 @@ export default function ToolBar({ cameraPreset, onCameraChange, onShowShortcuts 
         >
           위에서 보기
         </button>
+        <button
+          className={`preset-btn ${cameraPreset === 'walkthrough' ? 'active' : ''}`}
+          onClick={() => onCameraChange('walkthrough')}
+        >
+          1인칭 보기
+        </button>
       </div>
       <div style={{ display: 'flex', gap: 6, marginBottom: 10 }}>
         <button

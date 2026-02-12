@@ -101,6 +101,16 @@ function App() {
         <ContextMenu {...contextMenu} onClose={() => setContextMenu(null)} />
       )}
       <ShortcutHelp open={shortcutHelpOpen} onClose={() => setShortcutHelpOpen(false)} />
+      {cameraPreset === 'walkthrough' && (
+        <div style={{
+          position: 'fixed', bottom: 20, left: '50%', transform: 'translateX(-50%)',
+          background: 'rgba(26, 26, 46, 0.85)', color: '#e0e0e0',
+          padding: '8px 16px', borderRadius: 8, fontSize: 13, zIndex: 100,
+          pointerEvents: 'none',
+        }}>
+          캔버스를 클릭하여 마우스 잠금 | WASD 이동 | Esc로 마우스 해제
+        </div>
+      )}
     </div>
   );
 }
