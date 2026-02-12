@@ -1,4 +1,4 @@
-import { useRef, useCallback } from 'react';
+import { useRef, useCallback, useState } from 'react';
 import type { Group } from 'three';
 import * as THREE from 'three';
 import { useThree } from '@react-three/fiber';
@@ -6,6 +6,7 @@ import type { ThreeEvent } from '@react-three/fiber';
 import type { FurnitureInstance } from '../../types';
 import { useStore } from '../../store/useStore';
 import { GRID_SNAP_SIZE, WALL_SNAP_THRESHOLD } from '../../utils/constants';
+import { checkCollisions } from '../../utils/collision';
 import FurnitureGeometry from './FurnitureGeometry';
 
 const snap = (v: number, grid: number) => Math.round(v / grid) * grid;
@@ -23,6 +24,8 @@ interface FurnitureItemProps {
 export default function FurnitureItem({ item }: FurnitureItemProps) {
   const groupRef = useRef<Group>(null);
   const draggingRef = useRef(false);
+  const collidingRef = useRef(false);
+  const [isColliding, setIsColliding] = useState(false);
   const selectedFurnitureId = useStore((s) => s.selectedFurnitureId);
   const setSelectedFurnitureId = useStore((s) => s.setSelectedFurnitureId);
   const updateFurniture = useStore((s) => s.updateFurniture);
@@ -59,20 +62,32 @@ export default function FurnitureItem({ item }: FurnitureItemProps) {
         if (!draggingRef.current || !groupRef.current || !room) return;
         const hit = raycastToFloor(ev.clientX, ev.clientY);
         if (hit) {
-          // Display in current room-local coordinates
-          groupRef.current.position.set(hit.worldX - room.position[0], 0, hit.worldZ - room.position[1]);
+          const localX = hit.worldX - room.position[0];
+          const localZ = hit.worldZ - room.position[1];
+          groupRef.current.position.set(localX, 0, localZ);
+
+          // Check collision
+          const furnitureList = useStore.getState().furnitureList;
+          const tempPos: [number, number, number] = [localX, 0, localZ];
+          const collides = checkCollisions(item, furnitureList, tempPos);
+          if (collides !== collidingRef.current) {
+            collidingRef.current = collides;
+            setIsColliding(collides);
+          }
         }
       };
 
       const onUp = () => {
         if (!groupRef.current || !room) return;
         draggingRef.current = false;
+        collidingRef.current = false;
+        setIsColliding(false);
 
         // Convert to world coordinates
         const worldX = groupRef.current.position.x + room.position[0];
         const worldZ = groupRef.current.position.z + room.position[1];
 
-        // Find target room: pick the room whose center is closest, or current room if inside bounds
+        // Find target room
         const allRooms = useStore.getState().rooms;
         let targetRoom = room;
         for (const r of allRooms) {
@@ -96,7 +111,7 @@ export default function FurnitureItem({ item }: FurnitureItemProps) {
           z = snap(z, GRID_SNAP_SIZE);
         }
 
-        // Account for rotation: swap width/depth at 90°/270°
+        // Account for rotation
         const yRot = ((item.rotation[1] % Math.PI) + Math.PI) % Math.PI;
         const isRotated = Math.abs(yRot - Math.PI / 2) < 0.01;
         const fw = isRotated ? item.dimensions.depth : item.dimensions.width;
@@ -158,6 +173,12 @@ export default function FurnitureItem({ item }: FurnitureItemProps) {
             ]}
           />
           <meshBasicMaterial color="#646cff" wireframe />
+        </mesh>
+      )}
+      {isColliding && draggingRef.current && (
+        <mesh position={[0, item.dimensions.height / 2, 0]}>
+          <boxGeometry args={[item.dimensions.width + 0.02, item.dimensions.height + 0.02, item.dimensions.depth + 0.02]} />
+          <meshBasicMaterial color="#ff0000" transparent opacity={0.3} depthWrite={false} />
         </mesh>
       )}
     </group>
