@@ -4,10 +4,12 @@ import type { Group } from 'three';
 import * as THREE from 'three';
 import { useThree } from '@react-three/fiber';
 import type { ThreeEvent } from '@react-three/fiber';
-import type { RoomInstance } from '../../types';
+import type { RoomInstance, WallElement, WallSide } from '../../types';
 import { useStore } from '../../store/useStore';
 import { COLORS, GRID_SNAP_SIZE, ROOM_SNAP_THRESHOLD } from '../../utils/constants';
 import DimensionLabel from './DimensionLabel';
+import DoorShape from './DoorShape';
+import WindowShape from './WindowShape';
 
 const _floorPlane = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0);
 const _intersection = new THREE.Vector3();
@@ -40,6 +42,79 @@ function FloorGrid({ width, depth }: { width: number; depth: number }) {
       <lineBasicMaterial color="#888" transparent opacity={0.25} />
     </lineSegments>
   );
+}
+
+interface WallSegment {
+  offset: number;
+  segWidth: number;
+  y: number;
+  segHeight: number;
+}
+
+function computeWallSegments(
+  wallLength: number,
+  wallHeight: number,
+  elements: WallElement[],
+): WallSegment[] {
+  if (elements.length === 0) {
+    return [{ offset: 0, segWidth: wallLength, y: wallHeight / 2, segHeight: wallHeight }];
+  }
+
+  const sorted = [...elements].sort((a, b) => a.offset - b.offset);
+  const segments: WallSegment[] = [];
+  let cursor = -wallLength / 2;
+
+  for (const el of sorted) {
+    const elLeft = el.offset - el.width / 2;
+    const elRight = el.offset + el.width / 2;
+    const elTop = el.elevation + el.height;
+
+    // Wall before this element (full height)
+    if (elLeft > cursor + 0.001) {
+      const w = elLeft - cursor;
+      segments.push({ offset: cursor + w / 2, segWidth: w, y: wallHeight / 2, segHeight: wallHeight });
+    }
+
+    // Wall above element
+    if (elTop < wallHeight - 0.001) {
+      segments.push({ offset: el.offset, segWidth: el.width, y: (elTop + wallHeight) / 2, segHeight: wallHeight - elTop });
+    }
+
+    // Wall below element (for windows)
+    if (el.elevation > 0.001) {
+      segments.push({ offset: el.offset, segWidth: el.width, y: el.elevation / 2, segHeight: el.elevation });
+    }
+
+    cursor = elRight;
+  }
+
+  // Wall after last element
+  const wallEnd = wallLength / 2;
+  if (cursor < wallEnd - 0.001) {
+    const w = wallEnd - cursor;
+    segments.push({ offset: cursor + w / 2, segWidth: w, y: wallHeight / 2, segHeight: wallHeight });
+  }
+
+  return segments;
+}
+
+function getWallTransform(
+  wall: WallSide,
+  width: number,
+  depth: number,
+  offset: number,
+  y: number,
+): { position: [number, number, number] } {
+  switch (wall) {
+    case 'north': return { position: [offset, y, -depth / 2] };
+    case 'south': return { position: [offset, y, depth / 2] };
+    case 'west': return { position: [-width / 2, y, offset] };
+    case 'east': return { position: [width / 2, y, offset] };
+  }
+}
+
+function wallLength(wall: WallSide, width: number, depth: number): number {
+  return wall === 'north' || wall === 'south' ? width : depth;
 }
 
 interface RoomProps {
@@ -197,45 +272,39 @@ export default function Room({ room, isSelected, onSelect, children }: RoomProps
         </>
       )}
 
-      {/* Back wall (z = -depth/2) */}
-      <mesh position={[0, height / 2, -depth / 2]}>
-        <boxGeometry args={[width, height, wallThickness]} />
-        <meshStandardMaterial
-          color={COLORS.wall}
-          transparent
-          opacity={COLORS.wallOpacity}
-        />
-      </mesh>
+      {/* Walls with openings */}
+      {(['north', 'south', 'east', 'west'] as const).map((side) => {
+        const wLen = wallLength(side, width, depth);
+        const elems = (room.wallElements ?? []).filter((el) => el.wall === side);
+        const segments = computeWallSegments(wLen, height, elems);
+        const isHorizontal = side === 'north' || side === 'south';
 
-      {/* Front wall (z = depth/2) */}
-      <mesh position={[0, height / 2, depth / 2]}>
-        <boxGeometry args={[width, height, wallThickness]} />
-        <meshStandardMaterial
-          color={COLORS.wall}
-          transparent
-          opacity={COLORS.wallOpacity}
-        />
-      </mesh>
-
-      {/* Left wall (x = -width/2) */}
-      <mesh position={[-width / 2, height / 2, 0]}>
-        <boxGeometry args={[wallThickness, height, depth]} />
-        <meshStandardMaterial
-          color={COLORS.wall}
-          transparent
-          opacity={COLORS.wallOpacity}
-        />
-      </mesh>
-
-      {/* Right wall (x = width/2) */}
-      <mesh position={[width / 2, height / 2, 0]}>
-        <boxGeometry args={[wallThickness, height, depth]} />
-        <meshStandardMaterial
-          color={COLORS.wall}
-          transparent
-          opacity={COLORS.wallOpacity}
-        />
-      </mesh>
+        return (
+          <group key={side}>
+            {segments.map((seg, i) => {
+              const { position: pos } = getWallTransform(side, width, depth, seg.offset, seg.y);
+              return (
+                <mesh key={i} position={pos}>
+                  <boxGeometry args={isHorizontal ? [seg.segWidth, seg.segHeight, wallThickness] : [wallThickness, seg.segHeight, seg.segWidth]} />
+                  <meshStandardMaterial color={COLORS.wall} transparent opacity={COLORS.wallOpacity} />
+                </mesh>
+              );
+            })}
+            {elems.map((el) => {
+              const { position: pos } = getWallTransform(side, width, depth, el.offset, el.elevation);
+              return (
+                <group key={el.id} position={pos} rotation-y={isHorizontal ? 0 : Math.PI / 2}>
+                  {el.type === 'door' ? (
+                    <DoorShape width={el.width} height={el.height} />
+                  ) : (
+                    <WindowShape width={el.width} height={el.height} />
+                  )}
+                </group>
+              );
+            })}
+          </group>
+        );
+      })}
 
       {children}
     </group>

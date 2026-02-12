@@ -4,12 +4,25 @@ export interface RoomConfig {
   height: number;
 }
 
+export type WallSide = 'north' | 'south' | 'east' | 'west';
+
+export interface WallElement {
+  id: string;
+  type: 'door' | 'window';
+  wall: WallSide;
+  offset: number;
+  width: number;
+  height: number;
+  elevation: number;
+}
+
 export interface RoomInstance {
   id: string;
   name: string;
   dimensions: RoomConfig;
   position: [number, number];
   locked?: boolean;
+  wallElements?: WallElement[];
 }
 
 export type MaterialType = 'wood' | 'fabric' | 'metal' | 'ceramic' | 'plastic' | 'glass';

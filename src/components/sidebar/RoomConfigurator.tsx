@@ -1,6 +1,14 @@
-import type { RoomInstance } from '../../types';
+import type { RoomInstance, WallSide, WallElement } from '../../types';
 import { useStore } from '../../store/useStore';
 import { createDefaultRoom, DEFAULT_ROOM } from '../../utils/constants';
+import { generateId } from '../../utils/ids';
+
+const WALL_LABELS: Record<WallSide, string> = {
+  north: '북(뒤)',
+  south: '남(앞)',
+  east: '동(오른쪽)',
+  west: '서(왼쪽)',
+};
 
 /** Find a grid position that doesn't overlap any existing room. */
 function findNonOverlappingPosition(rooms: RoomInstance[]): [number, number] {
@@ -36,6 +44,9 @@ export default function RoomConfigurator() {
   const addRoom = useStore((s) => s.addRoom);
   const updateRoom = useStore((s) => s.updateRoom);
   const removeRoom = useStore((s) => s.removeRoom);
+  const addWallElement = useStore((s) => s.addWallElement);
+  const updateWallElement = useStore((s) => s.updateWallElement);
+  const removeWallElement = useStore((s) => s.removeWallElement);
 
   const selectedRoom = rooms.find((r) => r.id === selectedRoomId);
 
@@ -185,7 +196,7 @@ export default function RoomConfigurator() {
           </div>
 
           <div style={{ marginBottom: 8, color: '#888', fontSize: 12 }}>방 위치</div>
-          <div style={{ display: 'flex', gap: 6 }}>
+          <div style={{ display: 'flex', gap: 6, marginBottom: 16 }}>
             {posFields.map(({ label, key, min, max }) => (
               <label key={key} style={{ flex: 1 }}>
                 <span style={{ color: '#888', fontSize: 11 }}>{label}</span>
@@ -213,6 +224,162 @@ export default function RoomConfigurator() {
               </label>
             ))}
           </div>
+
+          {/* Doors & Windows */}
+          <div style={{ marginBottom: 8, color: '#888', fontSize: 12 }}>문/창문</div>
+          <div style={{ display: 'flex', gap: 6, marginBottom: 8 }}>
+            <button
+              className="preset-btn"
+              style={{ flex: 1 }}
+              onClick={() => {
+                const el: WallElement = {
+                  id: generateId(),
+                  type: 'door',
+                  wall: 'south',
+                  offset: 0,
+                  width: 0.9,
+                  height: 2.1,
+                  elevation: 0,
+                };
+                addWallElement(selectedRoom.id, el);
+              }}
+            >
+              + 문
+            </button>
+            <button
+              className="preset-btn"
+              style={{ flex: 1 }}
+              onClick={() => {
+                const el: WallElement = {
+                  id: generateId(),
+                  type: 'window',
+                  wall: 'south',
+                  offset: 0,
+                  width: 1.2,
+                  height: 1.0,
+                  elevation: 1.0,
+                };
+                addWallElement(selectedRoom.id, el);
+              }}
+            >
+              + 창문
+            </button>
+          </div>
+          {(selectedRoom.wallElements ?? []).map((el) => (
+            <div
+              key={el.id}
+              style={{
+                background: '#222',
+                borderRadius: 4,
+                padding: '6px 8px',
+                marginBottom: 6,
+                fontSize: 12,
+              }}
+            >
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
+                <span style={{ color: '#ddd' }}>
+                  {el.type === 'door' ? '문' : '창문'}
+                </span>
+                <button
+                  style={{
+                    background: 'none',
+                    border: 'none',
+                    color: '#ff6b6b',
+                    cursor: 'pointer',
+                    fontSize: 13,
+                    padding: '0 4px',
+                  }}
+                  onClick={() => removeWallElement(selectedRoom.id, el.id)}
+                >
+                  ×
+                </button>
+              </div>
+              <div style={{ display: 'flex', gap: 4, marginBottom: 4 }}>
+                {(['north', 'south', 'east', 'west'] as const).map((side) => (
+                  <button
+                    key={side}
+                    className={`preset-btn ${el.wall === side ? 'active' : ''}`}
+                    style={{ flex: 1, fontSize: 10, padding: '2px 0' }}
+                    onClick={() => updateWallElement(selectedRoom.id, el.id, { wall: side })}
+                  >
+                    {WALL_LABELS[side]}
+                  </button>
+                ))}
+              </div>
+              <div style={{ display: 'flex', gap: 4 }}>
+                <label style={{ flex: 1 }}>
+                  <span style={{ color: '#888', fontSize: 10 }}>위치</span>
+                  <input
+                    type="number"
+                    step={0.1}
+                    value={el.offset}
+                    onChange={(e) =>
+                      updateWallElement(selectedRoom.id, el.id, {
+                        offset: parseFloat(e.target.value) || 0,
+                      })
+                    }
+                    style={{
+                      width: '100%',
+                      padding: '2px 4px',
+                      background: '#1a1a2e',
+                      border: '1px solid #444',
+                      borderRadius: 3,
+                      color: '#ddd',
+                      fontSize: 11,
+                    }}
+                  />
+                </label>
+                <label style={{ flex: 1 }}>
+                  <span style={{ color: '#888', fontSize: 10 }}>폭</span>
+                  <input
+                    type="number"
+                    step={0.1}
+                    min={0.3}
+                    max={5}
+                    value={el.width}
+                    onChange={(e) =>
+                      updateWallElement(selectedRoom.id, el.id, {
+                        width: Math.max(0.3, parseFloat(e.target.value) || 0.3),
+                      })
+                    }
+                    style={{
+                      width: '100%',
+                      padding: '2px 4px',
+                      background: '#1a1a2e',
+                      border: '1px solid #444',
+                      borderRadius: 3,
+                      color: '#ddd',
+                      fontSize: 11,
+                    }}
+                  />
+                </label>
+                <label style={{ flex: 1 }}>
+                  <span style={{ color: '#888', fontSize: 10 }}>높이</span>
+                  <input
+                    type="number"
+                    step={0.1}
+                    min={0.3}
+                    max={4}
+                    value={el.height}
+                    onChange={(e) =>
+                      updateWallElement(selectedRoom.id, el.id, {
+                        height: Math.max(0.3, parseFloat(e.target.value) || 0.3),
+                      })
+                    }
+                    style={{
+                      width: '100%',
+                      padding: '2px 4px',
+                      background: '#1a1a2e',
+                      border: '1px solid #444',
+                      borderRadius: 3,
+                      color: '#ddd',
+                      fontSize: 11,
+                    }}
+                  />
+                </label>
+              </div>
+            </div>
+          ))}
         </>
       )}
     </section>

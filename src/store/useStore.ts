@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import type { RoomConfig, RoomInstance, FurnitureInstance, FloorPlanConfig } from '../types';
+import type { RoomConfig, RoomInstance, FurnitureInstance, FloorPlanConfig, WallElement } from '../types';
 import type { SnapGuideline } from '../utils/snapGuides';
 import { createDefaultRoom } from '../utils/constants';
 import { generateId } from '../utils/ids';
@@ -72,6 +72,11 @@ interface AppState {
   updateRoom: (id: string, updates: Partial<Omit<RoomInstance, 'id'>>) => void;
   removeRoom: (id: string) => void;
   setSelectedRoomId: (id: string | null) => void;
+
+  // Wall elements
+  addWallElement: (roomId: string, element: WallElement) => void;
+  updateWallElement: (roomId: string, elementId: string, updates: Partial<WallElement>) => void;
+  removeWallElement: (roomId: string, elementId: string) => void;
 
   // Furniture
   addFurniture: (item: FurnitureInstance) => void;
@@ -198,6 +203,41 @@ export const useStore = create<AppState>()(
         })),
 
       setSelectedRoomId: (id) => set({ selectedRoomId: id }),
+
+      addWallElement: (roomId, element) =>
+        set((state) => ({
+          ...pushHistory(state),
+          rooms: state.rooms.map((r) =>
+            r.id === roomId
+              ? { ...r, wallElements: [...(r.wallElements ?? []), element] }
+              : r
+          ),
+        })),
+
+      updateWallElement: (roomId, elementId, updates) =>
+        set((state) => ({
+          ...pushHistory(state),
+          rooms: state.rooms.map((r) =>
+            r.id === roomId
+              ? {
+                  ...r,
+                  wallElements: (r.wallElements ?? []).map((el) =>
+                    el.id === elementId ? { ...el, ...updates } : el
+                  ),
+                }
+              : r
+          ),
+        })),
+
+      removeWallElement: (roomId, elementId) =>
+        set((state) => ({
+          ...pushHistory(state),
+          rooms: state.rooms.map((r) =>
+            r.id === roomId
+              ? { ...r, wallElements: (r.wallElements ?? []).filter((el) => el.id !== elementId) }
+              : r
+          ),
+        })),
 
       addFurniture: (item) =>
         set((state) => ({
