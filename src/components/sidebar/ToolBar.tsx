@@ -11,7 +11,7 @@ interface ToolBarProps {
 }
 
 export default function ToolBar({ cameraPreset, onCameraChange, onShowShortcuts }: ToolBarProps) {
-  const selectedFurnitureId = useStore((s) => s.selectedFurnitureId);
+  const selectedFurnitureIds = useStore((s) => s.selectedFurnitureIds);
   const furnitureList = useStore((s) => s.furnitureList);
   const updateFurniture = useStore((s) => s.updateFurniture);
   const removeFurniture = useStore((s) => s.removeFurniture);
@@ -32,7 +32,9 @@ export default function ToolBar({ cameraPreset, onCameraChange, onShowShortcuts 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const floorPlanInputRef = useRef<HTMLInputElement>(null);
 
-  const selectedItem = furnitureList.find((f) => f.id === selectedFurnitureId);
+  const selectedItem = selectedFurnitureIds.length === 1
+    ? furnitureList.find((f) => f.id === selectedFurnitureIds[0])
+    : null;
 
   const rotateY = (angle: number) => {
     if (!selectedItem) return;
@@ -68,7 +70,7 @@ export default function ToolBar({ cameraPreset, onCameraChange, onShowShortcuts 
           <button
             className="preset-btn"
             style={{ width: '100%', marginBottom: 6 }}
-            onClick={() => duplicateFurniture(selectedFurnitureId!)}
+            onClick={() => duplicateFurniture(selectedFurnitureIds[0])}
             title="선택한 가구를 복제합니다 (Ctrl+D)"
           >
             복제 (Ctrl+D)
@@ -76,7 +78,7 @@ export default function ToolBar({ cameraPreset, onCameraChange, onShowShortcuts 
           <button
             className="preset-btn"
             style={{ width: '100%', color: '#ff6b6b', marginBottom: 10 }}
-            onClick={() => removeFurniture(selectedFurnitureId!)}
+            onClick={() => removeFurniture(selectedFurnitureIds[0])}
           >
             삭제 (Del)
           </button>
@@ -212,11 +214,11 @@ export default function ToolBar({ cameraPreset, onCameraChange, onShowShortcuts 
         onClick={() => {
           const { gl, scene, camera } = getSceneRefs();
           if (!gl || !scene || !camera) return;
-          const prevSelected = useStore.getState().selectedFurnitureId;
+          const prevSelected = useStore.getState().selectedFurnitureIds;
           useStore.getState().setSelectedFurnitureId(null);
           gl.render(scene, camera);
           const dataUrl = gl.domElement.toDataURL('image/png');
-          useStore.getState().setSelectedFurnitureId(prevSelected);
+          prevSelected.forEach((id) => useStore.getState().toggleFurnitureSelection(id));
           const a = document.createElement('a');
           a.href = dataUrl;
           a.download = `my-model-house-${Date.now()}.png`;

@@ -5,7 +5,7 @@ export function useKeyboardShortcuts(onToggleShortcutHelp?: () => void) {
   const removeFurniture = useStore((s) => s.removeFurniture);
   const duplicateFurniture = useStore((s) => s.duplicateFurniture);
   const setSelectedFurnitureId = useStore((s) => s.setSelectedFurnitureId);
-  const selectedFurnitureId = useStore((s) => s.selectedFurnitureId);
+  const selectedFurnitureIds = useStore((s) => s.selectedFurnitureIds);
   const updateFurniture = useStore((s) => s.updateFurniture);
   const furnitureList = useStore((s) => s.furnitureList);
   const undo = useStore((s) => s.undo);
@@ -41,38 +41,41 @@ export function useKeyboardShortcuts(onToggleShortcutHelp?: () => void) {
         return;
       }
 
-      // Ctrl+D / Cmd+D: Duplicate
+      // Ctrl+D / Cmd+D: Duplicate all selected
       if ((e.ctrlKey || e.metaKey) && e.key === 'd') {
         e.preventDefault();
-        if (selectedFurnitureId) {
-          duplicateFurniture(selectedFurnitureId);
-        }
+        selectedFurnitureIds.forEach((id) => duplicateFurniture(id));
         return;
       }
 
-      if (!selectedFurnitureId) return;
-      const item = furnitureList.find((f) => f.id === selectedFurnitureId);
+      if (selectedFurnitureIds.length === 0) return;
 
       switch (e.key) {
         case 'r':
           // Rotate right 90°
-          if (item) {
-            updateFurniture(selectedFurnitureId, {
-              rotation: [item.rotation[0], item.rotation[1] + Math.PI / 2, item.rotation[2]],
-            });
-          }
+          selectedFurnitureIds.forEach((id) => {
+            const item = furnitureList.find((f) => f.id === id);
+            if (item) {
+              updateFurniture(id, {
+                rotation: [item.rotation[0], item.rotation[1] + Math.PI / 2, item.rotation[2]],
+              });
+            }
+          });
           break;
         case 'R':
           // Rotate left 90°
-          if (item) {
-            updateFurniture(selectedFurnitureId, {
-              rotation: [item.rotation[0], item.rotation[1] - Math.PI / 2, item.rotation[2]],
-            });
-          }
+          selectedFurnitureIds.forEach((id) => {
+            const item = furnitureList.find((f) => f.id === id);
+            if (item) {
+              updateFurniture(id, {
+                rotation: [item.rotation[0], item.rotation[1] - Math.PI / 2, item.rotation[2]],
+              });
+            }
+          });
           break;
         case 'Delete':
         case 'Backspace':
-          removeFurniture(selectedFurnitureId);
+          selectedFurnitureIds.forEach((id) => removeFurniture(id));
           break;
         case 'Escape':
           setSelectedFurnitureId(null);
@@ -82,5 +85,5 @@ export function useKeyboardShortcuts(onToggleShortcutHelp?: () => void) {
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [selectedFurnitureId, furnitureList, removeFurniture, duplicateFurniture, setSelectedFurnitureId, updateFurniture, undo, redo, onToggleShortcutHelp]);
+  }, [selectedFurnitureIds, furnitureList, removeFurniture, duplicateFurniture, setSelectedFurnitureId, updateFurniture, undo, redo, onToggleShortcutHelp]);
 }

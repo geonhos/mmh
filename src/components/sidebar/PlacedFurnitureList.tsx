@@ -3,7 +3,7 @@ import { useStore } from '../../store/useStore';
 export default function PlacedFurnitureList() {
   const rooms = useStore((s) => s.rooms);
   const furnitureList = useStore((s) => s.furnitureList);
-  const selectedFurnitureId = useStore((s) => s.selectedFurnitureId);
+  const selectedFurnitureIds = useStore((s) => s.selectedFurnitureIds);
   const setSelectedFurnitureId = useStore((s) => s.setSelectedFurnitureId);
   const setSelectedRoomId = useStore((s) => s.setSelectedRoomId);
 
@@ -40,8 +40,8 @@ export default function PlacedFurnitureList() {
                   borderRadius: 4,
                   cursor: 'pointer',
                   fontSize: 12,
-                  background: selectedFurnitureId === item.id ? '#333' : 'transparent',
-                  color: selectedFurnitureId === item.id ? '#fff' : '#bbb',
+                  background: selectedFurnitureIds.includes(item.id) ? '#333' : 'transparent',
+                  color: selectedFurnitureIds.includes(item.id) ? '#fff' : '#bbb',
                 }}
               >
                 <span

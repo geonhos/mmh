@@ -57,7 +57,7 @@ interface AppState {
   rooms: RoomInstance[];
   selectedRoomId: string | null;
   furnitureList: FurnitureInstance[];
-  selectedFurnitureId: string | null;
+  selectedFurnitureIds: string[];
   snapEnabled: boolean;
 
   // Undo/Redo
@@ -78,6 +78,7 @@ interface AppState {
   removeFurniture: (id: string) => void;
   duplicateFurniture: (id: string) => void;
   setSelectedFurnitureId: (id: string | null) => void;
+  toggleFurnitureSelection: (id: string) => void;
 
   // Snap
   setSnapEnabled: (enabled: boolean) => void;
@@ -116,7 +117,7 @@ export const useStore = create<AppState>()(
       rooms: [initialRoom],
       selectedRoomId: initialRoom.id,
       furnitureList: [],
-      selectedFurnitureId: null,
+      selectedFurnitureIds: [],
       snapEnabled: true,
       _history: [],
       _future: [],
@@ -137,9 +138,9 @@ export const useStore = create<AppState>()(
             selectedRoomId: snapshot.rooms.find((r) => r.id === state.selectedRoomId)
               ? state.selectedRoomId
               : snapshot.rooms[0]?.id ?? null,
-            selectedFurnitureId: snapshot.furnitureList.find((f) => f.id === state.selectedFurnitureId)
-              ? state.selectedFurnitureId
-              : null,
+            selectedFurnitureIds: state.selectedFurnitureIds.filter((id) =>
+              snapshot.furnitureList.some((f) => f.id === id)
+            ),
           };
         }),
 
@@ -161,9 +162,9 @@ export const useStore = create<AppState>()(
             selectedRoomId: snapshot.rooms.find((r) => r.id === state.selectedRoomId)
               ? state.selectedRoomId
               : snapshot.rooms[0]?.id ?? null,
-            selectedFurnitureId: snapshot.furnitureList.find((f) => f.id === state.selectedFurnitureId)
-              ? state.selectedFurnitureId
-              : null,
+            selectedFurnitureIds: state.selectedFurnitureIds.filter((id) =>
+              snapshot.furnitureList.some((f) => f.id === id)
+            ),
           };
         }),
 
@@ -211,7 +212,7 @@ export const useStore = create<AppState>()(
         set((state) => ({
           ...pushHistory(state),
           furnitureList: state.furnitureList.filter((f) => f.id !== id),
-          selectedFurnitureId: state.selectedFurnitureId === id ? null : state.selectedFurnitureId,
+          selectedFurnitureIds: state.selectedFurnitureIds.filter((sid) => sid !== id),
         })),
 
       duplicateFurniture: (id) =>
@@ -227,11 +228,18 @@ export const useStore = create<AppState>()(
           return {
             ...pushHistory(state),
             furnitureList: [...state.furnitureList, clone],
-            selectedFurnitureId: clone.id,
+            selectedFurnitureIds: [clone.id],
           };
         }),
 
-      setSelectedFurnitureId: (id) => set({ selectedFurnitureId: id }),
+      setSelectedFurnitureId: (id) => set({ selectedFurnitureIds: id ? [id] : [] }),
+
+      toggleFurnitureSelection: (id) =>
+        set((state) => ({
+          selectedFurnitureIds: state.selectedFurnitureIds.includes(id)
+            ? state.selectedFurnitureIds.filter((sid) => sid !== id)
+            : [...state.selectedFurnitureIds, id],
+        })),
 
       setSnapEnabled: (enabled) => set({ snapEnabled: enabled }),
 
@@ -268,7 +276,7 @@ export const useStore = create<AppState>()(
           rooms: data.rooms,
           furnitureList: data.furnitureList,
           selectedRoomId: data.rooms[0]?.id ?? null,
-          selectedFurnitureId: null,
+          selectedFurnitureIds: [],
         }));
       },
     }),

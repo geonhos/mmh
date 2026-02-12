@@ -28,13 +28,13 @@ export default function FurnitureItem({ item }: FurnitureItemProps) {
   const draggingRef = useRef(false);
   const collidingRef = useRef(false);
   const [isColliding, setIsColliding] = useState(false);
-  const selectedFurnitureId = useStore((s) => s.selectedFurnitureId);
+  const isSelected = useStore((s) => s.selectedFurnitureIds.includes(item.id));
   const setSelectedFurnitureId = useStore((s) => s.setSelectedFurnitureId);
+  const toggleFurnitureSelection = useStore((s) => s.toggleFurnitureSelection);
   const setContextMenu = useStore((s) => s.setContextMenu);
   const updateFurniture = useStore((s) => s.updateFurniture);
   const snapEnabled = useStore((s) => s.snapEnabled);
   const rooms = useStore((s) => s.rooms);
-  const isSelected = selectedFurnitureId === item.id;
   const { camera, gl, controls } = useThree();
 
   const room = rooms.find((r) => r.id === item.roomId);
@@ -157,7 +157,11 @@ export default function FurnitureItem({ item }: FurnitureItemProps) {
       onClick={(e) => {
         if (draggingRef.current) return;
         e.stopPropagation();
-        setSelectedFurnitureId(item.id);
+        if (e.nativeEvent.shiftKey) {
+          toggleFurnitureSelection(item.id);
+        } else {
+          setSelectedFurnitureId(item.id);
+        }
       }}
       onPointerDown={handlePointerDown}
       onContextMenu={(e) => {

@@ -1,11 +1,39 @@
 import { useStore } from '../../store/useStore';
 
 export default function FurniturePanel() {
-  const selectedFurnitureId = useStore((s) => s.selectedFurnitureId);
+  const selectedIds = useStore((s) => s.selectedFurnitureIds);
   const furnitureList = useStore((s) => s.furnitureList);
   const updateFurniture = useStore((s) => s.updateFurniture);
+  const removeFurniture = useStore((s) => s.removeFurniture);
 
-  const item = furnitureList.find((f) => f.id === selectedFurnitureId);
+  const selectedItems = furnitureList.filter((f) => selectedIds.includes(f.id));
+  if (selectedItems.length === 0) return null;
+
+  if (selectedItems.length > 1) {
+    return (
+      <section style={{ marginBottom: 24 }}>
+        <h3 style={{ fontSize: 14, marginBottom: 12, color: '#aaa' }}>
+          {selectedItems.length}개 가구 선택됨
+        </h3>
+        <button
+          className="preset-btn"
+          style={{ width: '100%', color: '#ff6b6b', marginBottom: 6 }}
+          onClick={() => selectedIds.forEach((id) => removeFurniture(id))}
+        >
+          전체 삭제
+        </button>
+        <button
+          className="preset-btn"
+          style={{ width: '100%' }}
+          onClick={() => selectedIds.forEach((id) => updateFurniture(id, { locked: true }))}
+        >
+          전체 고정
+        </button>
+      </section>
+    );
+  }
+
+  const item = selectedItems[0];
   if (!item) return null;
 
   const posLabels = ['X', 'Y', 'Z'] as const;
