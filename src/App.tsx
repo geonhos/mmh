@@ -6,6 +6,7 @@ import FurnitureCatalog from './components/sidebar/FurnitureCatalog';
 import FurniturePanel from './components/sidebar/FurniturePanel';
 import PlacedFurnitureList from './components/sidebar/PlacedFurnitureList';
 import ToolBar from './components/sidebar/ToolBar';
+import { ContactShadows } from '@react-three/drei';
 import Room from './components/scene/Room';
 import SceneLighting from './components/scene/SceneLighting';
 import CameraController, { type CameraPreset } from './components/scene/CameraController';
@@ -52,6 +53,15 @@ function App() {
               ))}
           </Room>
         ))}
+        <ContactShadows
+          position={[0, -0.005, 0]}
+          opacity={0.4}
+          scale={30}
+          blur={2}
+          far={4}
+          resolution={256}
+          color="#000000"
+        />
         <CameraController preset={cameraPreset} />
         <gridHelper args={[20, 20, '#444', '#333']} />
         <mesh
