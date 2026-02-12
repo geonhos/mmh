@@ -9,6 +9,7 @@ import { GRID_SNAP_SIZE, WALL_SNAP_THRESHOLD } from '../../utils/constants';
 import { checkCollisions } from '../../utils/collision';
 import FurnitureGeometry from './FurnitureGeometry';
 import DimensionLabel from './DimensionLabel';
+import { furnitureCatalog } from '../../store/furnitureCatalog';
 
 const snap = (v: number, grid: number) => Math.round(v / grid) * grid;
 
@@ -37,6 +38,8 @@ export default function FurnitureItem({ item }: FurnitureItemProps) {
   const { camera, gl, controls } = useThree();
 
   const room = rooms.find((r) => r.id === item.roomId);
+  const catalogItem = furnitureCatalog.find((c) => c.id === item.catalogId);
+  const materialType = catalogItem?.materialType ?? 'wood';
 
   const raycastToFloor = useCallback(
     (clientX: number, clientY: number) => {
@@ -175,6 +178,7 @@ export default function FurnitureItem({ item }: FurnitureItemProps) {
         depth={item.dimensions.depth}
         height={item.dimensions.height}
         color={item.color}
+        materialType={materialType}
       />
       {isSelected && (
         <>

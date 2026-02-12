@@ -12,12 +12,15 @@ export interface RoomInstance {
   locked?: boolean;
 }
 
+export type MaterialType = 'wood' | 'fabric' | 'metal' | 'ceramic' | 'plastic' | 'glass';
+
 export interface FurnitureCatalogItem {
   id: string;
   name: string;
   category: string;
   dimensions: { width: number; depth: number; height: number };
   color: string;
+  materialType?: MaterialType;
 }
 
 export interface FurnitureInstance {
