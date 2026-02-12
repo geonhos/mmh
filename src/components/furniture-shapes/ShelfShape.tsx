@@ -1,5 +1,6 @@
+import { memo } from 'react';
 import type { MaterialType } from '../../types';
-import { getMaterialProps } from '../../utils/materials';
+import { getBoxGeometry, getPooledMaterial } from '../../utils/geometryPool';
 
 interface ShelfShapeProps {
   width: number;
@@ -9,33 +10,26 @@ interface ShelfShapeProps {
   materialType?: MaterialType;
 }
 
-export default function ShelfShape({ width, depth, height, color, materialType = 'wood' }: ShelfShapeProps) {
+export default memo(function ShelfShape({ width, depth, height, color, materialType = 'wood' }: ShelfShapeProps) {
   const panelThick = 0.03;
   const shelfCount = 4;
-  const matProps = getMaterialProps(materialType, color);
+  const mat = getPooledMaterial(materialType, color);
+  const panelGeo = getBoxGeometry(panelThick, height, depth);
+  const shelfGeo = getBoxGeometry(width, panelThick, depth);
 
   return (
     <group>
       {/* Left panel */}
-      <mesh position={[-(width / 2 - panelThick / 2), height / 2, 0]} castShadow>
-        <boxGeometry args={[panelThick, height, depth]} />
-        <meshPhysicalMaterial {...matProps} />
-      </mesh>
+      <mesh position={[-(width / 2 - panelThick / 2), height / 2, 0]} castShadow geometry={panelGeo} material={mat} />
       {/* Right panel */}
-      <mesh position={[(width / 2 - panelThick / 2), height / 2, 0]} castShadow>
-        <boxGeometry args={[panelThick, height, depth]} />
-        <meshPhysicalMaterial {...matProps} />
-      </mesh>
+      <mesh position={[(width / 2 - panelThick / 2), height / 2, 0]} castShadow geometry={panelGeo} material={mat} />
       {/* Shelves */}
       {Array.from({ length: shelfCount }).map((_, i) => {
         const y = (height / (shelfCount - 1)) * i;
         return (
-          <mesh key={i} position={[0, y, 0]} castShadow>
-            <boxGeometry args={[width, panelThick, depth]} />
-            <meshPhysicalMaterial {...matProps} />
-          </mesh>
+          <mesh key={i} position={[0, y, 0]} castShadow geometry={shelfGeo} material={mat} />
         );
       })}
     </group>
   );
-}
+});

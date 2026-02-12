@@ -1,5 +1,6 @@
+import { memo } from 'react';
 import type { MaterialType } from '../../types';
-import { getMaterialProps } from '../../utils/materials';
+import { getBoxGeometry, getPooledMaterial } from '../../utils/geometryPool';
 
 interface SofaShapeProps {
   width: number;
@@ -9,36 +10,44 @@ interface SofaShapeProps {
   materialType?: MaterialType;
 }
 
-export default function SofaShape({ width, depth, height, color, materialType = 'fabric' }: SofaShapeProps) {
+export default memo(function SofaShape({ width, depth, height, color, materialType = 'fabric' }: SofaShapeProps) {
   const baseH = height * 0.45;
   const backH = height * 0.55;
   const backThick = 0.15;
   const armW = 0.12;
   const armH = height * 0.6;
-  const matProps = getMaterialProps(materialType, color);
+  const mat = getPooledMaterial(materialType, color);
 
   return (
     <group>
       {/* Seat base */}
-      <mesh position={[0, baseH / 2, 0]} castShadow>
-        <boxGeometry args={[width - armW * 2, baseH, depth - backThick]} />
-        <meshPhysicalMaterial {...matProps} />
-      </mesh>
+      <mesh
+        position={[0, baseH / 2, 0]}
+        castShadow
+        geometry={getBoxGeometry(width - armW * 2, baseH, depth - backThick)}
+        material={mat}
+      />
       {/* Backrest */}
-      <mesh position={[0, baseH + backH / 2, -(depth / 2 - backThick / 2)]} castShadow>
-        <boxGeometry args={[width, backH, backThick]} />
-        <meshPhysicalMaterial {...matProps} />
-      </mesh>
+      <mesh
+        position={[0, baseH + backH / 2, -(depth / 2 - backThick / 2)]}
+        castShadow
+        geometry={getBoxGeometry(width, backH, backThick)}
+        material={mat}
+      />
       {/* Left armrest */}
-      <mesh position={[-(width / 2 - armW / 2), armH / 2, 0]} castShadow>
-        <boxGeometry args={[armW, armH, depth]} />
-        <meshPhysicalMaterial {...matProps} />
-      </mesh>
+      <mesh
+        position={[-(width / 2 - armW / 2), armH / 2, 0]}
+        castShadow
+        geometry={getBoxGeometry(armW, armH, depth)}
+        material={mat}
+      />
       {/* Right armrest */}
-      <mesh position={[(width / 2 - armW / 2), armH / 2, 0]} castShadow>
-        <boxGeometry args={[armW, armH, depth]} />
-        <meshPhysicalMaterial {...matProps} />
-      </mesh>
+      <mesh
+        position={[(width / 2 - armW / 2), armH / 2, 0]}
+        castShadow
+        geometry={getBoxGeometry(armW, armH, depth)}
+        material={mat}
+      />
     </group>
   );
-}
+});

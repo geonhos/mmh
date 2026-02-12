@@ -1,4 +1,4 @@
-import { useRef, useCallback, useState } from 'react';
+import { useRef, useCallback, useState, memo } from 'react';
 import type { Group } from 'three';
 import * as THREE from 'three';
 import { useThree } from '@react-three/fiber';
@@ -24,7 +24,7 @@ interface FurnitureItemProps {
   item: FurnitureInstance;
 }
 
-export default function FurnitureItem({ item }: FurnitureItemProps) {
+function FurnitureItem({ item }: FurnitureItemProps) {
   const groupRef = useRef<Group>(null);
   const draggingRef = useRef(false);
   const collidingRef = useRef(false);
@@ -235,3 +235,24 @@ export default function FurnitureItem({ item }: FurnitureItemProps) {
     </group>
   );
 }
+
+export default memo(FurnitureItem, (prev, next) => {
+  const a = prev.item;
+  const b = next.item;
+  return (
+    a.id === b.id &&
+    a.position[0] === b.position[0] &&
+    a.position[1] === b.position[1] &&
+    a.position[2] === b.position[2] &&
+    a.rotation[0] === b.rotation[0] &&
+    a.rotation[1] === b.rotation[1] &&
+    a.rotation[2] === b.rotation[2] &&
+    a.dimensions.width === b.dimensions.width &&
+    a.dimensions.depth === b.dimensions.depth &&
+    a.dimensions.height === b.dimensions.height &&
+    a.color === b.color &&
+    a.locked === b.locked &&
+    a.roomId === b.roomId &&
+    a.catalogId === b.catalogId
+  );
+});

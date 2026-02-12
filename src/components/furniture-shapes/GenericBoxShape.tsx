@@ -1,5 +1,6 @@
+import { memo } from 'react';
 import type { MaterialType } from '../../types';
-import { getMaterialProps } from '../../utils/materials';
+import { getBoxGeometry, getPooledMaterial } from '../../utils/geometryPool';
 
 interface GenericBoxShapeProps {
   width: number;
@@ -9,12 +10,13 @@ interface GenericBoxShapeProps {
   materialType?: MaterialType;
 }
 
-export default function GenericBoxShape({ width, depth, height, color, materialType = 'wood' }: GenericBoxShapeProps) {
-  const matProps = getMaterialProps(materialType, color);
+export default memo(function GenericBoxShape({ width, depth, height, color, materialType = 'wood' }: GenericBoxShapeProps) {
   return (
-    <mesh position={[0, height / 2, 0]} castShadow>
-      <boxGeometry args={[width, height, depth]} />
-      <meshPhysicalMaterial {...matProps} />
-    </mesh>
+    <mesh
+      position={[0, height / 2, 0]}
+      castShadow
+      geometry={getBoxGeometry(width, height, depth)}
+      material={getPooledMaterial(materialType, color)}
+    />
   );
-}
+});

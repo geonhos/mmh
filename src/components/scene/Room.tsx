@@ -1,4 +1,4 @@
-import { useRef, useMemo, useCallback } from 'react';
+import { useRef, useMemo, useCallback, memo } from 'react';
 import type { ReactNode } from 'react';
 import type { Group } from 'three';
 import * as THREE from 'three';
@@ -124,7 +124,7 @@ interface RoomProps {
   children?: ReactNode;
 }
 
-export default function Room({ room, isSelected, onSelect, children }: RoomProps) {
+function RoomInner({ room, isSelected, onSelect, children }: RoomProps) {
   const { width, depth, height } = room.dimensions;
   const wallThickness = 0.08;
   const snapEnabled = useStore((s) => s.snapEnabled);
@@ -310,3 +310,6 @@ export default function Room({ room, isSelected, onSelect, children }: RoomProps
     </group>
   );
 }
+
+const Room = memo(RoomInner);
+export default Room;
