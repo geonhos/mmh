@@ -60,9 +60,11 @@ interface AppState {
   selectedFurnitureId: string | null;
   snapEnabled: boolean;
 
-  // Undo
+  // Undo/Redo
   _history: Snapshot[];
+  _future: Snapshot[];
   undo: () => void;
+  redo: () => void;
 
   // Room CRUD
   addRoom: (room: RoomInstance) => void;
@@ -85,14 +87,14 @@ interface AppState {
   importFromFile: (json: string) => void;
 }
 
-function pushHistory(state: AppState): Snapshot[] {
+function pushHistory(state: AppState): { _history: Snapshot[]; _future: Snapshot[] } {
   const snapshot: Snapshot = {
     rooms: state.rooms,
     furnitureList: state.furnitureList,
   };
   const history = [...state._history, snapshot];
   if (history.length > MAX_HISTORY) history.shift();
-  return history;
+  return { _history: history, _future: [] };
 }
 
 export const useStore = create<AppState>()(
@@ -104,15 +106,45 @@ export const useStore = create<AppState>()(
       selectedFurnitureId: null,
       snapEnabled: true,
       _history: [],
+      _future: [],
 
       undo: () =>
         set((state) => {
           if (state._history.length === 0) return state;
           const history = [...state._history];
           const snapshot = history.pop()!;
+          const futureSnapshot: Snapshot = {
+            rooms: state.rooms,
+            furnitureList: state.furnitureList,
+          };
           return {
             ...snapshot,
             _history: history,
+            _future: [...state._future, futureSnapshot],
+            selectedRoomId: snapshot.rooms.find((r) => r.id === state.selectedRoomId)
+              ? state.selectedRoomId
+              : snapshot.rooms[0]?.id ?? null,
+            selectedFurnitureId: snapshot.furnitureList.find((f) => f.id === state.selectedFurnitureId)
+              ? state.selectedFurnitureId
+              : null,
+          };
+        }),
+
+      redo: () =>
+        set((state) => {
+          if (state._future.length === 0) return state;
+          const future = [...state._future];
+          const snapshot = future.pop()!;
+          const historySnapshot: Snapshot = {
+            rooms: state.rooms,
+            furnitureList: state.furnitureList,
+          };
+          const history = [...state._history, historySnapshot];
+          if (history.length > MAX_HISTORY) history.shift();
+          return {
+            ...snapshot,
+            _history: history,
+            _future: future,
             selectedRoomId: snapshot.rooms.find((r) => r.id === state.selectedRoomId)
               ? state.selectedRoomId
               : snapshot.rooms[0]?.id ?? null,
@@ -124,13 +156,13 @@ export const useStore = create<AppState>()(
 
       addRoom: (room) =>
         set((state) => ({
-          _history: pushHistory(state),
+          ...pushHistory(state),
           rooms: [...state.rooms, room],
         })),
 
       updateRoom: (id, updates) =>
         set((state) => ({
-          _history: pushHistory(state),
+          ...pushHistory(state),
           rooms: state.rooms.map((r) =>
             r.id === id ? { ...r, ...updates } : r
           ),
@@ -138,7 +170,7 @@ export const useStore = create<AppState>()(
 
       removeRoom: (id) =>
         set((state) => ({
-          _history: pushHistory(state),
+          ...pushHistory(state),
           rooms: state.rooms.filter((r) => r.id !== id),
           furnitureList: state.furnitureList.filter((f) => f.roomId !== id),
           selectedRoomId: state.selectedRoomId === id
@@ -150,13 +182,13 @@ export const useStore = create<AppState>()(
 
       addFurniture: (item) =>
         set((state) => ({
-          _history: pushHistory(state),
+          ...pushHistory(state),
           furnitureList: [...state.furnitureList, item],
         })),
 
       updateFurniture: (id, updates) =>
         set((state) => ({
-          _history: pushHistory(state),
+          ...pushHistory(state),
           furnitureList: state.furnitureList.map((f) =>
             f.id === id ? { ...f, ...updates } : f
           ),
@@ -164,7 +196,7 @@ export const useStore = create<AppState>()(
 
       removeFurniture: (id) =>
         set((state) => ({
-          _history: pushHistory(state),
+          ...pushHistory(state),
           furnitureList: state.furnitureList.filter((f) => f.id !== id),
           selectedFurnitureId: state.selectedFurnitureId === id ? null : state.selectedFurnitureId,
         })),
@@ -180,7 +212,7 @@ export const useStore = create<AppState>()(
             locked: false,
           };
           return {
-            _history: pushHistory(state),
+            ...pushHistory(state),
             furnitureList: [...state.furnitureList, clone],
             selectedFurnitureId: clone.id,
           };
@@ -206,7 +238,7 @@ export const useStore = create<AppState>()(
         const data = parseSaveData(json);
         if (!data) return;
         set((state) => ({
-          _history: pushHistory(state),
+          ...pushHistory(state),
           rooms: data.rooms,
           furnitureList: data.furnitureList,
           selectedRoomId: data.rooms[0]?.id ?? null,

@@ -13,6 +13,10 @@ export default function ToolBar({ cameraPreset, onCameraChange }: ToolBarProps) 
   const updateFurniture = useStore((s) => s.updateFurniture);
   const removeFurniture = useStore((s) => s.removeFurniture);
   const duplicateFurniture = useStore((s) => s.duplicateFurniture);
+  const undo = useStore((s) => s.undo);
+  const redo = useStore((s) => s.redo);
+  const historyLength = useStore((s) => s._history.length);
+  const futureLength = useStore((s) => s._future.length);
   const snapEnabled = useStore((s) => s.snapEnabled);
   const setSnapEnabled = useStore((s) => s.setSnapEnabled);
   const exportToFile = useStore((s) => s.exportToFile);
@@ -69,6 +73,21 @@ export default function ToolBar({ cameraPreset, onCameraChange }: ToolBarProps) 
           </button>
         </>
       )}
+
+      {/* Undo/Redo */}
+      <h3 style={{ fontSize: 14, marginBottom: 8, color: '#aaa' }}>실행취소</h3>
+      <div style={{ display: 'flex', gap: 6, marginBottom: 10 }}>
+        <button className="preset-btn" style={{ flex: 1 }}
+          onClick={undo} disabled={historyLength === 0}
+          title="실행취소 (Ctrl+Z)">
+          ↩ 실행취소
+        </button>
+        <button className="preset-btn" style={{ flex: 1 }}
+          onClick={redo} disabled={futureLength === 0}
+          title="다시실행 (Ctrl+Shift+Z)">
+          다시실행 ↪
+        </button>
+      </div>
 
       {/* View */}
       <h3 style={{ fontSize: 14, marginBottom: 8, color: '#aaa' }}>보기</h3>
