@@ -1,6 +1,9 @@
+import * as THREE from 'three';
 import { EffectComposer, SSAO, Bloom } from '@react-three/postprocessing';
 import { BlendFunction } from 'postprocessing';
 import { useStore } from '../../store/useStore';
+
+const ssaoColor = new THREE.Color('#000000');
 
 export default function PostProcessing() {
   const quality = useStore((s) => s.postProcessingQuality);
@@ -17,14 +20,16 @@ export default function PostProcessing() {
         radius={0.5}
         intensity={15}
         luminanceInfluence={0.5}
-        color="#000000"
+        color={ssaoColor}
       />
-      {isHigh && (
+      {isHigh ? (
         <Bloom
           intensity={0.1}
           luminanceThreshold={0.9}
           luminanceSmoothing={0.5}
         />
+      ) : (
+        <></>
       )}
     </EffectComposer>
   );
