@@ -7,6 +7,7 @@ import type { FurnitureInstance } from '../../types';
 import { useStore } from '../../store/useStore';
 import { GRID_SNAP_SIZE, WALL_SNAP_THRESHOLD } from '../../utils/constants';
 import { checkCollisions } from '../../utils/collision';
+import { computeSnapGuides } from '../../utils/snapGuides';
 import FurnitureGeometry from './FurnitureGeometry';
 import DimensionLabel from './DimensionLabel';
 import { furnitureCatalog } from '../../store/furnitureCatalog';
@@ -67,12 +68,26 @@ export default function FurnitureItem({ item }: FurnitureItemProps) {
         if (!draggingRef.current || !groupRef.current || !room) return;
         const hit = raycastToFloor(ev.clientX, ev.clientY);
         if (hit) {
-          const localX = hit.worldX - room.position[0];
-          const localZ = hit.worldZ - room.position[1];
+          let localX = hit.worldX - room.position[0];
+          let localZ = hit.worldZ - room.position[1];
+
+          // Snap guidelines
+          const state = useStore.getState();
+          if (state.snapEnabled) {
+            const tempPos: [number, number, number] = [localX, 0, localZ];
+            const others = state.furnitureList.filter((f) => f.id !== item.id);
+            const { guidelines, snappedX, snappedZ } = computeSnapGuides(
+              item, tempPos, others, room.position,
+            );
+            if (snappedX !== null) localX = snappedX;
+            if (snappedZ !== null) localZ = snappedZ;
+            state.setActiveGuidelines(guidelines);
+          }
+
           groupRef.current.position.set(localX, 0, localZ);
 
           // Check collision
-          const furnitureList = useStore.getState().furnitureList;
+          const furnitureList = state.furnitureList;
           const tempPos: [number, number, number] = [localX, 0, localZ];
           const collides = checkCollisions(item, furnitureList, tempPos);
           if (collides !== collidingRef.current) {
@@ -87,6 +102,7 @@ export default function FurnitureItem({ item }: FurnitureItemProps) {
         draggingRef.current = false;
         collidingRef.current = false;
         setIsColliding(false);
+        useStore.getState().setActiveGuidelines([]);
 
         // Convert to world coordinates
         const worldX = groupRef.current.position.x + room.position[0];

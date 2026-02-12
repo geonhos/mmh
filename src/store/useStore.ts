@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import type { RoomConfig, RoomInstance, FurnitureInstance, FloorPlanConfig } from '../types';
+import type { SnapGuideline } from '../utils/snapGuides';
 import { createDefaultRoom } from '../utils/constants';
 import { generateId } from '../utils/ids';
 
@@ -90,6 +91,10 @@ interface AppState {
   // Post-processing
   postProcessingQuality: 'off' | 'low' | 'high';
   setPostProcessingQuality: (quality: 'off' | 'low' | 'high') => void;
+
+  // Snap guidelines (non-persisted, non-history)
+  activeGuidelines: SnapGuideline[];
+  setActiveGuidelines: (guidelines: SnapGuideline[]) => void;
 
   // Floor plan
   floorPlan: FloorPlanConfig | null;
@@ -242,6 +247,9 @@ export const useStore = create<AppState>()(
         })),
 
       setSnapEnabled: (enabled) => set({ snapEnabled: enabled }),
+
+      activeGuidelines: [],
+      setActiveGuidelines: (guidelines) => set({ activeGuidelines: guidelines }),
 
       contextMenu: null,
       setContextMenu: (menu) => set({ contextMenu: menu }),

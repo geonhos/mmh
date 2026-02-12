@@ -15,6 +15,7 @@ import CameraController, { type CameraPreset } from './components/scene/CameraCo
 import FurnitureItem from './components/scene/FurnitureItem';
 import FloorPlanOverlay from './components/scene/FloorPlanOverlay';
 import PostProcessing from './components/scene/PostProcessing';
+import SnapGuidelines from './components/scene/SnapGuidelines';
 import { useStore } from './store/useStore';
 import { useKeyboardShortcuts } from './hooks/useKeyboardShortcuts';
 import { decodeStateFromHash } from './utils/sharing';
@@ -87,6 +88,7 @@ function App() {
           resolution={256}
           color="#000000"
         />
+        <SnapGuidelines />
         <PostProcessing />
         <CameraController preset={cameraPreset} />
         <gridHelper args={[20, 20, '#444', '#333']} />
