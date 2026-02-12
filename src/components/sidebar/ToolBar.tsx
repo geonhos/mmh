@@ -5,9 +5,10 @@ import type { CameraPreset } from '../scene/CameraController';
 interface ToolBarProps {
   cameraPreset: CameraPreset;
   onCameraChange: (preset: CameraPreset) => void;
+  onShowShortcuts?: () => void;
 }
 
-export default function ToolBar({ cameraPreset, onCameraChange }: ToolBarProps) {
+export default function ToolBar({ cameraPreset, onCameraChange, onShowShortcuts }: ToolBarProps) {
   const selectedFurnitureId = useStore((s) => s.selectedFurnitureId);
   const furnitureList = useStore((s) => s.furnitureList);
   const updateFurniture = useStore((s) => s.updateFurniture);
@@ -113,6 +114,10 @@ export default function ToolBar({ cameraPreset, onCameraChange }: ToolBarProps) 
           title="켜면 가구와 방이 격자/벽에 딱 맞게 정렬됩니다"
         >
           격자 정렬 {snapEnabled ? 'ON' : 'OFF'}
+        </button>
+        <button className="preset-btn" style={{ flex: 1 }}
+          onClick={onShowShortcuts} title="키보드 단축키 (?)">
+          ? 단축키
         </button>
       </div>
 

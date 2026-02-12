@@ -6,6 +6,7 @@ import FurnitureCatalog from './components/sidebar/FurnitureCatalog';
 import FurniturePanel from './components/sidebar/FurniturePanel';
 import PlacedFurnitureList from './components/sidebar/PlacedFurnitureList';
 import ToolBar from './components/sidebar/ToolBar';
+import ShortcutHelp from './components/sidebar/ShortcutHelp';
 import { ContactShadows } from '@react-three/drei';
 import Room from './components/scene/Room';
 import SceneLighting from './components/scene/SceneLighting';
@@ -17,13 +18,14 @@ import './App.css';
 
 function App() {
   const [cameraPreset, setCameraPreset] = useState<CameraPreset>('perspective');
+  const [shortcutHelpOpen, setShortcutHelpOpen] = useState(false);
   const rooms = useStore((s) => s.rooms);
   const furnitureList = useStore((s) => s.furnitureList);
   const selectedRoomId = useStore((s) => s.selectedRoomId);
   const setSelectedRoomId = useStore((s) => s.setSelectedRoomId);
   const setSelectedFurnitureId = useStore((s) => s.setSelectedFurnitureId);
 
-  useKeyboardShortcuts();
+  useKeyboardShortcuts(() => setShortcutHelpOpen((prev) => !prev));
 
   return (
     <div className="app-layout">
@@ -34,6 +36,7 @@ function App() {
         <ToolBar
           cameraPreset={cameraPreset}
           onCameraChange={setCameraPreset}
+          onShowShortcuts={() => setShortcutHelpOpen(true)}
         />
         <FurniturePanel />
       </Sidebar>
@@ -73,6 +76,7 @@ function App() {
           <planeGeometry args={[50, 50]} />
         </mesh>
       </Viewport>
+      <ShortcutHelp open={shortcutHelpOpen} onClose={() => setShortcutHelpOpen(false)} />
     </div>
   );
 }

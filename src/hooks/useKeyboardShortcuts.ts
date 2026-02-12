@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
 import { useStore } from '../store/useStore';
 
-export function useKeyboardShortcuts() {
+export function useKeyboardShortcuts(onToggleShortcutHelp?: () => void) {
   const removeFurniture = useStore((s) => s.removeFurniture);
   const duplicateFurniture = useStore((s) => s.duplicateFurniture);
   const setSelectedFurnitureId = useStore((s) => s.setSelectedFurnitureId);
@@ -15,6 +15,13 @@ export function useKeyboardShortcuts() {
     const handleKeyDown = (e: KeyboardEvent) => {
       const tag = (e.target as HTMLElement).tagName;
       if (tag === 'INPUT' || tag === 'TEXTAREA') return;
+
+      // ? key: Toggle shortcut help
+      if (e.key === '?' || (e.shiftKey && e.key === '/')) {
+        e.preventDefault();
+        onToggleShortcutHelp?.();
+        return;
+      }
 
       // Ctrl+Z / Cmd+Z: Undo, Ctrl+Shift+Z: Redo
       if ((e.ctrlKey || e.metaKey) && e.key === 'z') {
@@ -75,5 +82,5 @@ export function useKeyboardShortcuts() {
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [selectedFurnitureId, furnitureList, removeFurniture, duplicateFurniture, setSelectedFurnitureId, updateFurniture, undo, redo]);
+  }, [selectedFurnitureId, furnitureList, removeFurniture, duplicateFurniture, setSelectedFurnitureId, updateFurniture, undo, redo, onToggleShortcutHelp]);
 }
