@@ -22,6 +22,8 @@ export default function ToolBar({ cameraPreset, onCameraChange, onShowShortcuts 
   const futureLength = useStore((s) => s._future.length);
   const snapEnabled = useStore((s) => s.snapEnabled);
   const setSnapEnabled = useStore((s) => s.setSnapEnabled);
+  const ppQuality = useStore((s) => s.postProcessingQuality);
+  const setPPQuality = useStore((s) => s.setPostProcessingQuality);
   const exportToFile = useStore((s) => s.exportToFile);
   const importFromFile = useStore((s) => s.importFromFile);
   const floorPlan = useStore((s) => s.floorPlan);
@@ -118,7 +120,7 @@ export default function ToolBar({ cameraPreset, onCameraChange, onShowShortcuts 
           1인칭 보기
         </button>
       </div>
-      <div style={{ display: 'flex', gap: 6, marginBottom: 10 }}>
+      <div style={{ display: 'flex', gap: 6, marginBottom: 6 }}>
         <button
           className={`preset-btn ${snapEnabled ? 'active' : ''}`}
           style={{ flex: 1 }}
@@ -132,6 +134,13 @@ export default function ToolBar({ cameraPreset, onCameraChange, onShowShortcuts 
           ? 단축키
         </button>
       </div>
+      <button className="preset-btn" style={{ width: '100%', marginBottom: 10 }}
+        onClick={() => {
+          const cycle = { off: 'low', low: 'high', high: 'off' } as const;
+          setPPQuality(cycle[ppQuality]);
+        }}>
+        효과: {ppQuality === 'off' ? '끄기' : ppQuality === 'low' ? '낮음' : '높음'}
+      </button>
 
       {/* Floor plan */}
       <h3 style={{ fontSize: 14, marginBottom: 8, color: '#aaa' }}>도면</h3>

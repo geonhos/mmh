@@ -86,6 +86,10 @@ interface AppState {
   contextMenu: { x: number; y: number; targetId: string; targetType: 'furniture' | 'room' } | null;
   setContextMenu: (menu: AppState['contextMenu']) => void;
 
+  // Post-processing
+  postProcessingQuality: 'off' | 'low' | 'high';
+  setPostProcessingQuality: (quality: 'off' | 'low' | 'high') => void;
+
   // Floor plan
   floorPlan: FloorPlanConfig | null;
   setFloorPlan: (config: FloorPlanConfig | null) => void;
@@ -234,6 +238,9 @@ export const useStore = create<AppState>()(
       contextMenu: null,
       setContextMenu: (menu) => set({ contextMenu: menu }),
 
+      postProcessingQuality: 'off',
+      setPostProcessingQuality: (quality) => set({ postProcessingQuality: quality }),
+
       floorPlan: null,
       setFloorPlan: (config) => set({ floorPlan: config }),
       updateFloorPlan: (updates) =>
@@ -274,6 +281,7 @@ export const useStore = create<AppState>()(
         selectedRoomId: state.selectedRoomId,
         snapEnabled: state.snapEnabled,
         floorPlan: state.floorPlan,
+        postProcessingQuality: state.postProcessingQuality,
       }),
       migrate: (persistedState: unknown, version: number) => {
         if (version < 2) {

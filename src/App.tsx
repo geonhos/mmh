@@ -14,6 +14,7 @@ import SceneLighting from './components/scene/SceneLighting';
 import CameraController, { type CameraPreset } from './components/scene/CameraController';
 import FurnitureItem from './components/scene/FurnitureItem';
 import FloorPlanOverlay from './components/scene/FloorPlanOverlay';
+import PostProcessing from './components/scene/PostProcessing';
 import { useStore } from './store/useStore';
 import { useKeyboardShortcuts } from './hooks/useKeyboardShortcuts';
 import { decodeStateFromHash } from './utils/sharing';
@@ -86,6 +87,7 @@ function App() {
           resolution={256}
           color="#000000"
         />
+        <PostProcessing />
         <CameraController preset={cameraPreset} />
         <gridHelper args={[20, 20, '#444', '#333']} />
         <mesh
