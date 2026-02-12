@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Sidebar from './components/layout/Sidebar';
 import Viewport from './components/layout/Viewport';
 import RoomConfigurator from './components/sidebar/RoomConfigurator';
@@ -15,6 +15,7 @@ import CameraController, { type CameraPreset } from './components/scene/CameraCo
 import FurnitureItem from './components/scene/FurnitureItem';
 import { useStore } from './store/useStore';
 import { useKeyboardShortcuts } from './hooks/useKeyboardShortcuts';
+import { decodeStateFromHash } from './utils/sharing';
 import './App.css';
 
 function App() {
@@ -29,6 +30,21 @@ function App() {
   const setContextMenu = useStore((s) => s.setContextMenu);
 
   useKeyboardShortcuts(() => setShortcutHelpOpen((prev) => !prev));
+
+  useEffect(() => {
+    const hash = window.location.hash;
+    if (hash.startsWith('#share=')) {
+      const state = decodeStateFromHash(hash);
+      if (state) {
+        useStore.getState().importFromFile(JSON.stringify({
+          version: 2,
+          rooms: state.rooms,
+          furnitureList: state.furnitureList,
+        }));
+        window.history.replaceState(null, '', window.location.pathname);
+      }
+    }
+  }, []);
 
   return (
     <div className="app-layout">

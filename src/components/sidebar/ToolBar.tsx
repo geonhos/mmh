@@ -1,6 +1,7 @@
 import { useRef } from 'react';
 import { useStore } from '../../store/useStore';
 import { getSceneRefs } from '../scene/SceneBridge';
+import { encodeStateToHash } from '../../utils/sharing';
 import type { CameraPreset } from '../scene/CameraController';
 
 interface ToolBarProps {
@@ -140,6 +141,23 @@ export default function ToolBar({ cameraPreset, onCameraChange, onShowShortcuts 
         }}
         title="현재 화면을 이미지로 저장합니다">
         스크린샷 저장
+      </button>
+      <button className="preset-btn" style={{ width: '100%', marginBottom: 6 }}
+        onClick={async () => {
+          const { rooms, furnitureList } = useStore.getState();
+          const url = encodeStateToHash(rooms, furnitureList);
+          if (!url) {
+            alert('현재 프로젝트가 너무 커서 URL로 공유할 수 없습니다. 파일로 저장해 주세요.');
+            return;
+          }
+          try {
+            await navigator.clipboard.writeText(url);
+            alert('링크가 클립보드에 복사되었습니다!');
+          } catch {
+            prompt('아래 링크를 복사하세요:', url);
+          }
+        }}>
+        링크 복사
       </button>
       <div style={{ display: 'flex', gap: 6 }}>
         <button className="preset-btn" style={{ flex: 1 }} onClick={exportToFile}>
