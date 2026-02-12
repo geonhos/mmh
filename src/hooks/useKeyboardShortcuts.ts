@@ -3,6 +3,7 @@ import { useStore } from '../store/useStore';
 
 export function useKeyboardShortcuts() {
   const removeFurniture = useStore((s) => s.removeFurniture);
+  const duplicateFurniture = useStore((s) => s.duplicateFurniture);
   const setSelectedFurnitureId = useStore((s) => s.setSelectedFurnitureId);
   const selectedFurnitureId = useStore((s) => s.selectedFurnitureId);
   const updateFurniture = useStore((s) => s.updateFurniture);
@@ -18,6 +19,15 @@ export function useKeyboardShortcuts() {
       if ((e.ctrlKey || e.metaKey) && e.key === 'z') {
         e.preventDefault();
         undo();
+        return;
+      }
+
+      // Ctrl+D / Cmd+D: Duplicate
+      if ((e.ctrlKey || e.metaKey) && e.key === 'd') {
+        e.preventDefault();
+        if (selectedFurnitureId) {
+          duplicateFurniture(selectedFurnitureId);
+        }
         return;
       }
 
@@ -53,5 +63,5 @@ export function useKeyboardShortcuts() {
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [selectedFurnitureId, furnitureList, removeFurniture, setSelectedFurnitureId, updateFurniture, undo]);
+  }, [selectedFurnitureId, furnitureList, removeFurniture, duplicateFurniture, setSelectedFurnitureId, updateFurniture, undo]);
 }

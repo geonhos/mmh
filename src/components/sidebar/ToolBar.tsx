@@ -12,6 +12,7 @@ export default function ToolBar({ cameraPreset, onCameraChange }: ToolBarProps) 
   const furnitureList = useStore((s) => s.furnitureList);
   const updateFurniture = useStore((s) => s.updateFurniture);
   const removeFurniture = useStore((s) => s.removeFurniture);
+  const duplicateFurniture = useStore((s) => s.duplicateFurniture);
   const snapEnabled = useStore((s) => s.snapEnabled);
   const setSnapEnabled = useStore((s) => s.setSnapEnabled);
   const exportToFile = useStore((s) => s.exportToFile);
@@ -51,6 +52,14 @@ export default function ToolBar({ cameraPreset, onCameraChange }: ToolBarProps) 
               90° 회전 →
             </button>
           </div>
+          <button
+            className="preset-btn"
+            style={{ width: '100%', marginBottom: 6 }}
+            onClick={() => duplicateFurniture(selectedFurnitureId!)}
+            title="선택한 가구를 복제합니다 (Ctrl+D)"
+          >
+            복제 (Ctrl+D)
+          </button>
           <button
             className="preset-btn"
             style={{ width: '100%', color: '#ff6b6b', marginBottom: 10 }}

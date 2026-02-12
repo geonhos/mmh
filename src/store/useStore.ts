@@ -2,6 +2,7 @@ import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import type { RoomConfig, RoomInstance, FurnitureInstance } from '../types';
 import { createDefaultRoom } from '../utils/constants';
+import { generateId } from '../utils/ids';
 
 const SAVE_VERSION = 2;
 const MAX_HISTORY = 50;
@@ -73,6 +74,7 @@ interface AppState {
   addFurniture: (item: FurnitureInstance) => void;
   updateFurniture: (id: string, updates: Partial<FurnitureInstance>) => void;
   removeFurniture: (id: string) => void;
+  duplicateFurniture: (id: string) => void;
   setSelectedFurnitureId: (id: string | null) => void;
 
   // Snap
@@ -166,6 +168,23 @@ export const useStore = create<AppState>()(
           furnitureList: state.furnitureList.filter((f) => f.id !== id),
           selectedFurnitureId: state.selectedFurnitureId === id ? null : state.selectedFurnitureId,
         })),
+
+      duplicateFurniture: (id) =>
+        set((state) => {
+          const source = state.furnitureList.find((f) => f.id === id);
+          if (!source) return state;
+          const clone: FurnitureInstance = {
+            ...source,
+            id: generateId(),
+            position: [source.position[0] + 0.3, source.position[1], source.position[2] + 0.3],
+            locked: false,
+          };
+          return {
+            _history: pushHistory(state),
+            furnitureList: [...state.furnitureList, clone],
+            selectedFurnitureId: clone.id,
+          };
+        }),
 
       setSelectedFurnitureId: (id) => set({ selectedFurnitureId: id }),
 
