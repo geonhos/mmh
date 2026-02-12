@@ -1,9 +1,12 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
+import { enablePatches, produceWithPatches, applyPatches, type Patch } from 'immer';
 import type { RoomConfig, RoomInstance, FurnitureInstance, FloorPlanConfig, WallElement } from '../types';
 import type { SnapGuideline } from '../utils/snapGuides';
 import { createDefaultRoom } from '../utils/constants';
 import { generateId } from '../utils/ids';
+
+enablePatches();
 
 const SAVE_VERSION = 2;
 const MAX_HISTORY = 50;
@@ -38,7 +41,6 @@ function parseSaveData(raw: string): SaveDataV2 | null {
   try {
     const data = JSON.parse(raw);
     if (data.version === 2) return data as SaveDataV2;
-    // v1: has room + furnitureList but no version
     if (data.room && data.furnitureList) return migrateV1toV2(data as SaveDataV1);
     return null;
   } catch {
@@ -46,10 +48,16 @@ function parseSaveData(raw: string): SaveDataV2 | null {
   }
 }
 
-/** Snapshot of undoable state */
-interface Snapshot {
+/** Undoable portion of the state */
+interface UndoableState {
   rooms: RoomInstance[];
   furnitureList: FurnitureInstance[];
+}
+
+/** Patch-based history entry (much smaller than full snapshots) */
+interface HistoryEntry {
+  patches: Patch[];
+  inversePatches: Patch[];
 }
 
 const initialRoom = createDefaultRoom('방 1');
@@ -61,9 +69,9 @@ interface AppState {
   selectedFurnitureIds: string[];
   snapEnabled: boolean;
 
-  // Undo/Redo
-  _history: Snapshot[];
-  _future: Snapshot[];
+  // Undo/Redo (patch-based)
+  _history: HistoryEntry[];
+  _future: HistoryEntry[];
   undo: () => void;
   redo: () => void;
 
@@ -111,14 +119,28 @@ interface AppState {
   importFromFile: (json: string) => void;
 }
 
-function pushHistory(state: AppState): { _history: Snapshot[]; _future: Snapshot[] } {
-  const snapshot: Snapshot = {
-    rooms: state.rooms,
-    furnitureList: state.furnitureList,
-  };
-  const history = [...state._history, snapshot];
+/**
+ * Produce a new undoable state with immer patches for undo/redo.
+ * Returns partial state with rooms, furnitureList, _history, _future.
+ */
+function withHistory(
+  state: AppState,
+  recipe: (draft: UndoableState) => void,
+): Partial<AppState> {
+  const base: UndoableState = { rooms: state.rooms, furnitureList: state.furnitureList };
+  const [nextState, patches, inversePatches] = produceWithPatches(base, recipe);
+
+  if (patches.length === 0) return {};
+
+  const history = [...state._history, { patches, inversePatches }];
   if (history.length > MAX_HISTORY) history.shift();
-  return { _history: history, _future: [] };
+
+  return {
+    rooms: nextState.rooms,
+    furnitureList: nextState.furnitureList,
+    _history: history,
+    _future: [],
+  };
 }
 
 export const useStore = create<AppState>()(
@@ -136,20 +158,19 @@ export const useStore = create<AppState>()(
         set((state) => {
           if (state._history.length === 0) return state;
           const history = [...state._history];
-          const snapshot = history.pop()!;
-          const futureSnapshot: Snapshot = {
-            rooms: state.rooms,
-            furnitureList: state.furnitureList,
-          };
+          const entry = history.pop()!;
+          const base: UndoableState = { rooms: state.rooms, furnitureList: state.furnitureList };
+          const next = applyPatches(base, entry.inversePatches);
           return {
-            ...snapshot,
+            rooms: next.rooms,
+            furnitureList: next.furnitureList,
             _history: history,
-            _future: [...state._future, futureSnapshot],
-            selectedRoomId: snapshot.rooms.find((r) => r.id === state.selectedRoomId)
+            _future: [...state._future, entry],
+            selectedRoomId: next.rooms.find((r) => r.id === state.selectedRoomId)
               ? state.selectedRoomId
-              : snapshot.rooms[0]?.id ?? null,
+              : next.rooms[0]?.id ?? null,
             selectedFurnitureIds: state.selectedFurnitureIds.filter((id) =>
-              snapshot.furnitureList.some((f) => f.id === id)
+              next.furnitureList.some((f) => f.id === id)
             ),
           };
         }),
@@ -158,45 +179,43 @@ export const useStore = create<AppState>()(
         set((state) => {
           if (state._future.length === 0) return state;
           const future = [...state._future];
-          const snapshot = future.pop()!;
-          const historySnapshot: Snapshot = {
-            rooms: state.rooms,
-            furnitureList: state.furnitureList,
-          };
-          const history = [...state._history, historySnapshot];
+          const entry = future.pop()!;
+          const base: UndoableState = { rooms: state.rooms, furnitureList: state.furnitureList };
+          const next = applyPatches(base, entry.patches);
+          const history = [...state._history, entry];
           if (history.length > MAX_HISTORY) history.shift();
           return {
-            ...snapshot,
+            rooms: next.rooms,
+            furnitureList: next.furnitureList,
             _history: history,
             _future: future,
-            selectedRoomId: snapshot.rooms.find((r) => r.id === state.selectedRoomId)
+            selectedRoomId: next.rooms.find((r) => r.id === state.selectedRoomId)
               ? state.selectedRoomId
-              : snapshot.rooms[0]?.id ?? null,
+              : next.rooms[0]?.id ?? null,
             selectedFurnitureIds: state.selectedFurnitureIds.filter((id) =>
-              snapshot.furnitureList.some((f) => f.id === id)
+              next.furnitureList.some((f) => f.id === id)
             ),
           };
         }),
 
       addRoom: (room) =>
-        set((state) => ({
-          ...pushHistory(state),
-          rooms: [...state.rooms, room],
+        set((state) => withHistory(state, (draft) => {
+          draft.rooms.push(room);
         })),
 
       updateRoom: (id, updates) =>
-        set((state) => ({
-          ...pushHistory(state),
-          rooms: state.rooms.map((r) =>
-            r.id === id ? { ...r, ...updates } : r
-          ),
+        set((state) => withHistory(state, (draft) => {
+          const room = draft.rooms.find((r) => r.id === id);
+          if (room) Object.assign(room, updates);
         })),
 
       removeRoom: (id) =>
         set((state) => ({
-          ...pushHistory(state),
-          rooms: state.rooms.filter((r) => r.id !== id),
-          furnitureList: state.furnitureList.filter((f) => f.roomId !== id),
+          ...withHistory(state, (draft) => {
+            const idx = draft.rooms.findIndex((r) => r.id === id);
+            if (idx >= 0) draft.rooms.splice(idx, 1);
+            draft.furnitureList = draft.furnitureList.filter((f) => f.roomId !== id);
+          }),
           selectedRoomId: state.selectedRoomId === id
             ? (state.rooms.find((r) => r.id !== id)?.id ?? null)
             : state.selectedRoomId,
@@ -205,58 +224,46 @@ export const useStore = create<AppState>()(
       setSelectedRoomId: (id) => set({ selectedRoomId: id }),
 
       addWallElement: (roomId, element) =>
-        set((state) => ({
-          ...pushHistory(state),
-          rooms: state.rooms.map((r) =>
-            r.id === roomId
-              ? { ...r, wallElements: [...(r.wallElements ?? []), element] }
-              : r
-          ),
+        set((state) => withHistory(state, (draft) => {
+          const room = draft.rooms.find((r) => r.id === roomId);
+          if (room) {
+            if (!room.wallElements) room.wallElements = [];
+            room.wallElements.push(element);
+          }
         })),
 
       updateWallElement: (roomId, elementId, updates) =>
-        set((state) => ({
-          ...pushHistory(state),
-          rooms: state.rooms.map((r) =>
-            r.id === roomId
-              ? {
-                  ...r,
-                  wallElements: (r.wallElements ?? []).map((el) =>
-                    el.id === elementId ? { ...el, ...updates } : el
-                  ),
-                }
-              : r
-          ),
+        set((state) => withHistory(state, (draft) => {
+          const room = draft.rooms.find((r) => r.id === roomId);
+          const el = room?.wallElements?.find((e) => e.id === elementId);
+          if (el) Object.assign(el, updates);
         })),
 
       removeWallElement: (roomId, elementId) =>
-        set((state) => ({
-          ...pushHistory(state),
-          rooms: state.rooms.map((r) =>
-            r.id === roomId
-              ? { ...r, wallElements: (r.wallElements ?? []).filter((el) => el.id !== elementId) }
-              : r
-          ),
+        set((state) => withHistory(state, (draft) => {
+          const room = draft.rooms.find((r) => r.id === roomId);
+          if (room?.wallElements) {
+            room.wallElements = room.wallElements.filter((e) => e.id !== elementId);
+          }
         })),
 
       addFurniture: (item) =>
-        set((state) => ({
-          ...pushHistory(state),
-          furnitureList: [...state.furnitureList, item],
+        set((state) => withHistory(state, (draft) => {
+          draft.furnitureList.push(item);
         })),
 
       updateFurniture: (id, updates) =>
-        set((state) => ({
-          ...pushHistory(state),
-          furnitureList: state.furnitureList.map((f) =>
-            f.id === id ? { ...f, ...updates } : f
-          ),
+        set((state) => withHistory(state, (draft) => {
+          const item = draft.furnitureList.find((f) => f.id === id);
+          if (item) Object.assign(item, updates);
         })),
 
       removeFurniture: (id) =>
         set((state) => ({
-          ...pushHistory(state),
-          furnitureList: state.furnitureList.filter((f) => f.id !== id),
+          ...withHistory(state, (draft) => {
+            const idx = draft.furnitureList.findIndex((f) => f.id === id);
+            if (idx >= 0) draft.furnitureList.splice(idx, 1);
+          }),
           selectedFurnitureIds: state.selectedFurnitureIds.filter((sid) => sid !== id),
         })),
 
@@ -264,16 +271,17 @@ export const useStore = create<AppState>()(
         set((state) => {
           const source = state.furnitureList.find((f) => f.id === id);
           if (!source) return state;
-          const clone: FurnitureInstance = {
-            ...source,
-            id: generateId(),
-            position: [source.position[0] + 0.3, source.position[1], source.position[2] + 0.3],
-            locked: false,
-          };
+          const cloneId = generateId();
           return {
-            ...pushHistory(state),
-            furnitureList: [...state.furnitureList, clone],
-            selectedFurnitureIds: [clone.id],
+            ...withHistory(state, (draft) => {
+              draft.furnitureList.push({
+                ...source,
+                id: cloneId,
+                position: [source.position[0] + 0.3, source.position[1], source.position[2] + 0.3],
+                locked: false,
+              });
+            }),
+            selectedFurnitureIds: [cloneId],
           };
         }),
 
@@ -320,9 +328,10 @@ export const useStore = create<AppState>()(
         const data = parseSaveData(json);
         if (!data) return;
         set((state) => ({
-          ...pushHistory(state),
-          rooms: data.rooms,
-          furnitureList: data.furnitureList,
+          ...withHistory(state, (draft) => {
+            draft.rooms = data.rooms;
+            draft.furnitureList = data.furnitureList;
+          }),
           selectedRoomId: data.rooms[0]?.id ?? null,
           selectedFurnitureIds: [],
         }));
