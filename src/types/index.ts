@@ -34,6 +34,8 @@ export interface FurnitureCatalogItem {
   dimensions: { width: number; depth: number; height: number };
   color: string;
   materialType?: MaterialType;
+  brand?: string;
+  model?: string;
 }
 
 export interface FloorPlanConfig {

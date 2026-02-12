@@ -62,6 +62,35 @@ export const furnitureCatalog: FurnitureCatalogItem[] = [
   { id: 'air-conditioner', name: '에어컨 (스탠드)', category: '가전', dimensions: { width: 0.35, depth: 0.35, height: 1.7 }, color: '#F0F0F0', materialType: 'plastic' },
   { id: 'air-purifier', name: '공기청정기', category: '가전', dimensions: { width: 0.35, depth: 0.35, height: 0.6 }, color: '#E0E0E0', materialType: 'plastic' },
   { id: 'vacuum-robot', name: '로봇청소기', category: '가전', dimensions: { width: 0.35, depth: 0.35, height: 0.1 }, color: '#333333', materialType: 'plastic' },
+
+  // IKEA
+  { id: 'ikea-malm-bed', name: 'MALM 침대프레임', category: '침실', dimensions: { width: 1.56, depth: 2.09, height: 0.38 }, color: '#C4A070', materialType: 'wood', brand: 'IKEA', model: 'MALM' },
+  { id: 'ikea-malm-drawer', name: 'MALM 서랍장 (6칸)', category: '침실', dimensions: { width: 0.8, depth: 0.48, height: 1.23 }, color: '#E0D0B8', materialType: 'wood', brand: 'IKEA', model: 'MALM' },
+  { id: 'ikea-kallax-4', name: 'KALLAX 선반 (2x2)', category: '수납', dimensions: { width: 0.77, depth: 0.39, height: 0.77 }, color: '#F5F0E8', materialType: 'wood', brand: 'IKEA', model: 'KALLAX' },
+  { id: 'ikea-kallax-8', name: 'KALLAX 선반 (2x4)', category: '수납', dimensions: { width: 0.77, depth: 0.39, height: 1.47 }, color: '#F5F0E8', materialType: 'wood', brand: 'IKEA', model: 'KALLAX' },
+  { id: 'ikea-billy', name: 'BILLY 책장', category: '수납', dimensions: { width: 0.8, depth: 0.28, height: 2.02 }, color: '#F0E8D8', materialType: 'wood', brand: 'IKEA', model: 'BILLY' },
+  { id: 'ikea-lack-table', name: 'LACK 커피테이블', category: '거실', dimensions: { width: 1.18, depth: 0.78, height: 0.45 }, color: '#1A1A1A', materialType: 'wood', brand: 'IKEA', model: 'LACK' },
+  { id: 'ikea-lack-shelf', name: 'LACK 벽선반', category: '수납', dimensions: { width: 1.1, depth: 0.26, height: 0.05 }, color: '#FFFFFF', materialType: 'wood', brand: 'IKEA', model: 'LACK' },
+  { id: 'ikea-hemnes-wardrobe', name: 'HEMNES 옷장', category: '침실', dimensions: { width: 1.2, depth: 0.5, height: 1.97 }, color: '#8B7355', materialType: 'wood', brand: 'IKEA', model: 'HEMNES' },
+  { id: 'ikea-poang', name: 'POÄNG 안락의자', category: '거실', dimensions: { width: 0.68, depth: 0.82, height: 1.0 }, color: '#C8B898', materialType: 'fabric', brand: 'IKEA', model: 'POÄNG' },
+  { id: 'ikea-klippan', name: 'KLIPPAN 소파 (2인)', category: '거실', dimensions: { width: 1.8, depth: 0.88, height: 0.66 }, color: '#4A5A4A', materialType: 'fabric', brand: 'IKEA', model: 'KLIPPAN' },
+
+  // 한샘 (Hanssem)
+  { id: 'hanssem-indigo-bed', name: '인디고 침대 (Q)', category: '침실', dimensions: { width: 1.6, depth: 2.1, height: 0.35 }, color: '#7B6B5B', materialType: 'wood', brand: '한샘', model: '인디고' },
+  { id: 'hanssem-prime-wardrobe', name: '프라임 장롱', category: '침실', dimensions: { width: 2.4, depth: 0.6, height: 2.2 }, color: '#A08B70', materialType: 'wood', brand: '한샘', model: '프라임' },
+  { id: 'hanssem-prime-desk', name: '프라임 책상', category: '사무', dimensions: { width: 1.2, depth: 0.6, height: 0.72 }, color: '#B09B80', materialType: 'wood', brand: '한샘', model: '프라임' },
+  { id: 'hanssem-indigo-drawer', name: '인디고 서랍장', category: '침실', dimensions: { width: 0.8, depth: 0.45, height: 0.8 }, color: '#8B7B6B', materialType: 'wood', brand: '한샘', model: '인디고' },
+  { id: 'hanssem-kitchen', name: '한샘 주방 싱크대', category: '주방', dimensions: { width: 2.4, depth: 0.6, height: 0.85 }, color: '#E0D8D0', materialType: 'ceramic', brand: '한샘', model: '주방' },
+  { id: 'hanssem-shoe-rack', name: '한샘 신발장', category: '수납', dimensions: { width: 1.0, depth: 0.35, height: 1.2 }, color: '#C0A888', materialType: 'wood', brand: '한샘', model: '수납' },
+
+  // 일룸 (Iloom)
+  { id: 'iloom-cusino-sofa', name: '쿠시노 소파 (3인)', category: '거실', dimensions: { width: 2.1, depth: 0.92, height: 0.82 }, color: '#5A6A5A', materialType: 'fabric', brand: '일룸', model: '쿠시노' },
+  { id: 'iloom-cusino-table', name: '쿠시노 거실장', category: '거실', dimensions: { width: 1.6, depth: 0.45, height: 0.5 }, color: '#C0B0A0', materialType: 'wood', brand: '일룸', model: '쿠시노' },
+  { id: 'iloom-roy-bed', name: '로이 침대 (Q)', category: '침실', dimensions: { width: 1.7, depth: 2.15, height: 0.32 }, color: '#6B5B4B', materialType: 'wood', brand: '일룸', model: '로이' },
+  { id: 'iloom-roy-drawer', name: '로이 서랍장', category: '침실', dimensions: { width: 1.0, depth: 0.45, height: 0.75 }, color: '#7B6B5B', materialType: 'wood', brand: '일룸', model: '로이' },
+  { id: 'iloom-desk', name: '일룸 데스커 책상', category: '사무', dimensions: { width: 1.4, depth: 0.7, height: 0.72 }, color: '#A09080', materialType: 'wood', brand: '일룸', model: '데스커' },
+  { id: 'iloom-kids-desk', name: '일룸 링키 책상', category: '사무', dimensions: { width: 1.2, depth: 0.6, height: 0.74 }, color: '#E0D8D0', materialType: 'wood', brand: '일룸', model: '링키' },
 ];
 
 export const categories = [...new Set(furnitureCatalog.map((c) => c.category))];
+export const brands = [...new Set(furnitureCatalog.map((c) => c.brand).filter(Boolean))] as string[];

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { furnitureCatalog, categories } from '../../store/furnitureCatalog';
+import { furnitureCatalog, categories, brands } from '../../store/furnitureCatalog';
 import { useStore } from '../../store/useStore';
 import { generateId } from '../../utils/ids';
 
@@ -8,11 +8,13 @@ export default function FurnitureCatalog() {
   const selectedRoomId = useStore((s) => s.selectedRoomId);
   const [search, setSearch] = useState('');
   const [activeCategory, setActiveCategory] = useState<string | null>(null);
+  const [activeBrand, setActiveBrand] = useState<string | null>(null);
 
   const filtered = furnitureCatalog.filter((item) => {
-    const matchSearch = !search || item.name.includes(search) || item.category.includes(search);
+    const matchSearch = !search || item.name.includes(search) || item.category.includes(search) || (item.brand && item.brand.includes(search)) || (item.model && item.model.includes(search));
     const matchCategory = !activeCategory || item.category === activeCategory;
-    return matchSearch && matchCategory;
+    const matchBrand = !activeBrand || item.brand === activeBrand;
+    return matchSearch && matchCategory && matchBrand;
   });
 
   const handleAdd = (catalogId: string) => {
@@ -37,7 +39,7 @@ export default function FurnitureCatalog() {
       {/* Search */}
       <input
         type="text"
-        placeholder="검색 (예: 침대, 냉장고...)"
+        placeholder="검색 (예: 침대, MALM, 한샘...)"
         value={search}
         onChange={(e) => setSearch(e.target.value)}
         style={{
@@ -52,6 +54,27 @@ export default function FurnitureCatalog() {
           boxSizing: 'border-box',
         }}
       />
+
+      {/* Brand filter tabs */}
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4, marginBottom: 6 }}>
+        <button
+          className={`preset-btn ${!activeBrand ? 'active' : ''}`}
+          style={{ padding: '3px 8px', fontSize: 11, flex: 'none' }}
+          onClick={() => setActiveBrand(null)}
+        >
+          전체
+        </button>
+        {brands.map((brand) => (
+          <button
+            key={brand}
+            className={`preset-btn ${activeBrand === brand ? 'active' : ''}`}
+            style={{ padding: '3px 8px', fontSize: 11, flex: 'none' }}
+            onClick={() => setActiveBrand(activeBrand === brand ? null : brand)}
+          >
+            {brand}
+          </button>
+        ))}
+      </div>
 
       {/* Category tabs */}
       <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4, marginBottom: 10 }}>
@@ -90,7 +113,14 @@ export default function FurnitureCatalog() {
               style={{ background: item.color }}
             />
             <div>
-              <div style={{ fontWeight: 500 }}>{item.name}</div>
+              <div style={{ fontWeight: 500 }}>
+                {item.name}
+                {item.brand && (
+                  <span style={{ fontSize: 10, color: '#646cff', marginLeft: 6 }}>
+                    {item.brand}
+                  </span>
+                )}
+              </div>
               <div style={{ fontSize: 11, color: '#888' }}>
                 {item.dimensions.width}m x {item.dimensions.depth}m x {item.dimensions.height}m
               </div>
