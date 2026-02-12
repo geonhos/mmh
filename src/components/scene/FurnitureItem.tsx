@@ -28,6 +28,7 @@ export default function FurnitureItem({ item }: FurnitureItemProps) {
   const [isColliding, setIsColliding] = useState(false);
   const selectedFurnitureId = useStore((s) => s.selectedFurnitureId);
   const setSelectedFurnitureId = useStore((s) => s.setSelectedFurnitureId);
+  const setContextMenu = useStore((s) => s.setContextMenu);
   const updateFurniture = useStore((s) => s.updateFurniture);
   const snapEnabled = useStore((s) => s.snapEnabled);
   const rooms = useStore((s) => s.rooms);
@@ -155,6 +156,17 @@ export default function FurnitureItem({ item }: FurnitureItemProps) {
         setSelectedFurnitureId(item.id);
       }}
       onPointerDown={handlePointerDown}
+      onContextMenu={(e) => {
+        e.stopPropagation();
+        e.nativeEvent.preventDefault();
+        setSelectedFurnitureId(item.id);
+        setContextMenu({
+          x: (e.nativeEvent as MouseEvent).clientX,
+          y: (e.nativeEvent as MouseEvent).clientY,
+          targetId: item.id,
+          targetType: 'furniture',
+        });
+      }}
     >
       <FurnitureGeometry
         catalogId={item.catalogId}

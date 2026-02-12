@@ -82,6 +82,10 @@ interface AppState {
   // Snap
   setSnapEnabled: (enabled: boolean) => void;
 
+  // Context menu
+  contextMenu: { x: number; y: number; targetId: string; targetType: 'furniture' | 'room' } | null;
+  setContextMenu: (menu: AppState['contextMenu']) => void;
+
   // Persistence
   exportToFile: () => void;
   importFromFile: (json: string) => void;
@@ -221,6 +225,9 @@ export const useStore = create<AppState>()(
       setSelectedFurnitureId: (id) => set({ selectedFurnitureId: id }),
 
       setSnapEnabled: (enabled) => set({ snapEnabled: enabled }),
+
+      contextMenu: null,
+      setContextMenu: (menu) => set({ contextMenu: menu }),
 
       exportToFile: () => {
         const { rooms, furnitureList } = useStore.getState();

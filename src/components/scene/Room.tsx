@@ -53,6 +53,7 @@ export default function Room({ room, isSelected, onSelect, children }: RoomProps
   const wallThickness = 0.08;
   const snapEnabled = useStore((s) => s.snapEnabled);
   const updateRoom = useStore((s) => s.updateRoom);
+  const setContextMenu = useStore((s) => s.setContextMenu);
   const groupRef = useRef<Group>(null);
   const draggingRef = useRef(false);
   const { camera, gl, controls } = useThree();
@@ -155,6 +156,16 @@ export default function Room({ room, isSelected, onSelect, children }: RoomProps
         position={[0, 0, 0]}
         receiveShadow
         onPointerDown={handleFloorPointerDown}
+        onContextMenu={(e) => {
+          e.stopPropagation();
+          e.nativeEvent.preventDefault();
+          setContextMenu({
+            x: (e.nativeEvent as MouseEvent).clientX,
+            y: (e.nativeEvent as MouseEvent).clientY,
+            targetId: room.id,
+            targetType: 'room',
+          });
+        }}
       >
         <planeGeometry args={[width, depth]} />
         <meshStandardMaterial color={COLORS.floor} />

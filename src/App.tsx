@@ -7,6 +7,7 @@ import FurniturePanel from './components/sidebar/FurniturePanel';
 import PlacedFurnitureList from './components/sidebar/PlacedFurnitureList';
 import ToolBar from './components/sidebar/ToolBar';
 import ShortcutHelp from './components/sidebar/ShortcutHelp';
+import ContextMenu from './components/ContextMenu';
 import { ContactShadows } from '@react-three/drei';
 import Room from './components/scene/Room';
 import SceneLighting from './components/scene/SceneLighting';
@@ -24,6 +25,8 @@ function App() {
   const selectedRoomId = useStore((s) => s.selectedRoomId);
   const setSelectedRoomId = useStore((s) => s.setSelectedRoomId);
   const setSelectedFurnitureId = useStore((s) => s.setSelectedFurnitureId);
+  const contextMenu = useStore((s) => s.contextMenu);
+  const setContextMenu = useStore((s) => s.setContextMenu);
 
   useKeyboardShortcuts(() => setShortcutHelpOpen((prev) => !prev));
 
@@ -76,6 +79,9 @@ function App() {
           <planeGeometry args={[50, 50]} />
         </mesh>
       </Viewport>
+      {contextMenu && (
+        <ContextMenu {...contextMenu} onClose={() => setContextMenu(null)} />
+      )}
       <ShortcutHelp open={shortcutHelpOpen} onClose={() => setShortcutHelpOpen(false)} />
     </div>
   );
