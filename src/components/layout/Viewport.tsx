@@ -19,6 +19,7 @@ export default function Viewport({ children }: ViewportProps) {
         <Canvas
           camera={{ position: [6, 6, 6], fov: 50 }}
           shadows
+          gl={{ preserveDrawingBuffer: true }}
         >
           <SceneBridge />
           {children}

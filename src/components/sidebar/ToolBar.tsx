@@ -1,5 +1,6 @@
 import { useRef } from 'react';
 import { useStore } from '../../store/useStore';
+import { getSceneRefs } from '../scene/SceneBridge';
 import type { CameraPreset } from '../scene/CameraController';
 
 interface ToolBarProps {
@@ -123,6 +124,23 @@ export default function ToolBar({ cameraPreset, onCameraChange, onShowShortcuts 
 
       {/* File */}
       <h3 style={{ fontSize: 14, marginBottom: 8, color: '#aaa' }}>파일</h3>
+      <button className="preset-btn" style={{ width: '100%', marginBottom: 6 }}
+        onClick={() => {
+          const { gl, scene, camera } = getSceneRefs();
+          if (!gl || !scene || !camera) return;
+          const prevSelected = useStore.getState().selectedFurnitureId;
+          useStore.getState().setSelectedFurnitureId(null);
+          gl.render(scene, camera);
+          const dataUrl = gl.domElement.toDataURL('image/png');
+          useStore.getState().setSelectedFurnitureId(prevSelected);
+          const a = document.createElement('a');
+          a.href = dataUrl;
+          a.download = `my-model-house-${Date.now()}.png`;
+          a.click();
+        }}
+        title="현재 화면을 이미지로 저장합니다">
+        스크린샷 저장
+      </button>
       <div style={{ display: 'flex', gap: 6 }}>
         <button className="preset-btn" style={{ flex: 1 }} onClick={exportToFile}>
           저장
