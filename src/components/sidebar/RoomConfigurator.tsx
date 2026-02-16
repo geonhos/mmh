@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import type { RoomInstance, WallSide, WallElement } from '../../types';
 import { useStore } from '../../store/useStore';
-import { createDefaultRoom, DEFAULT_ROOM } from '../../utils/constants';
+import { createDefaultRoom, DEFAULT_ROOM, FLOOR_PRESETS, WALL_PRESETS } from '../../utils/constants';
+import type { SurfacePreset } from '../../utils/constants';
 import { generateId } from '../../utils/ids';
 
 const WALL_LABELS: Record<WallSide, string> = {
@@ -140,6 +141,44 @@ export default function RoomConfigurator() {
                 boxSizing: 'border-box',
               }}
             />
+          </div>
+
+          {/* Floor material */}
+          <div style={{ marginBottom: 10 }}>
+            <label style={{ fontSize: 12, color: '#888', display: 'block', marginBottom: 4 }}>바닥</label>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4 }}>
+              {FLOOR_PRESETS.map((p) => (
+                <button
+                  key={p.id}
+                  title={p.label}
+                  onClick={() => updateRoom(selectedRoom.id, { floorMaterial: p.id })}
+                  style={{
+                    width: 24, height: 24, borderRadius: 4, border: '2px solid',
+                    borderColor: (selectedRoom.floorMaterial ?? FLOOR_PRESETS[0].id) === p.id ? '#646cff' : '#444',
+                    background: p.color, cursor: 'pointer', padding: 0,
+                  }}
+                />
+              ))}
+            </div>
+          </div>
+
+          {/* Wall material */}
+          <div style={{ marginBottom: 10 }}>
+            <label style={{ fontSize: 12, color: '#888', display: 'block', marginBottom: 4 }}>벽</label>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4 }}>
+              {WALL_PRESETS.map((p) => (
+                <button
+                  key={p.id}
+                  title={p.label}
+                  onClick={() => updateRoom(selectedRoom.id, { wallMaterial: p.id })}
+                  style={{
+                    width: 24, height: 24, borderRadius: 4, border: '2px solid',
+                    borderColor: (selectedRoom.wallMaterial ?? WALL_PRESETS[0].id) === p.id ? '#646cff' : '#444',
+                    background: p.color, cursor: 'pointer', padding: 0,
+                  }}
+                />
+              ))}
+            </div>
           </div>
 
           {dimFields.map(({ label, key, min, max, step }) => (

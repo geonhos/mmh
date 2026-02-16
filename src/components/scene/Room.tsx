@@ -6,7 +6,7 @@ import { useThree } from '@react-three/fiber';
 import type { ThreeEvent } from '@react-three/fiber';
 import type { RoomInstance, WallElement, WallSide } from '../../types';
 import { useStore } from '../../store/useStore';
-import { COLORS, GRID_SNAP_SIZE, ROOM_SNAP_THRESHOLD } from '../../utils/constants';
+import { COLORS, GRID_SNAP_SIZE, ROOM_SNAP_THRESHOLD, FLOOR_PRESETS, WALL_PRESETS } from '../../utils/constants';
 import DimensionLabel from './DimensionLabel';
 import DoorShape from './DoorShape';
 import WindowShape from './WindowShape';
@@ -127,6 +127,8 @@ interface RoomProps {
 function RoomInner({ room, isSelected, onSelect, children }: RoomProps) {
   const { width, depth, height } = room.dimensions;
   const wallThickness = 0.08;
+  const floorPreset = FLOOR_PRESETS.find((p) => p.id === room.floorMaterial) ?? FLOOR_PRESETS[0];
+  const wallPreset = WALL_PRESETS.find((p) => p.id === room.wallMaterial) ?? WALL_PRESETS[0];
   const snapEnabled = useStore((s) => s.snapEnabled);
   const updateRoom = useStore((s) => s.updateRoom);
   const setContextMenu = useStore((s) => s.setContextMenu);
@@ -244,7 +246,7 @@ function RoomInner({ room, isSelected, onSelect, children }: RoomProps) {
         }}
       >
         <planeGeometry args={[width, depth]} />
-        <meshStandardMaterial color={COLORS.floor} />
+        <meshStandardMaterial color={floorPreset.color} roughness={floorPreset.roughness} />
       </mesh>
 
       {/* Floor grid (visible when snap is on) */}
@@ -286,7 +288,7 @@ function RoomInner({ room, isSelected, onSelect, children }: RoomProps) {
               return (
                 <mesh key={i} position={pos}>
                   <boxGeometry args={isHorizontal ? [seg.segWidth, seg.segHeight, wallThickness] : [wallThickness, seg.segHeight, seg.segWidth]} />
-                  <meshStandardMaterial color={COLORS.wall} transparent opacity={COLORS.wallOpacity} />
+                  <meshStandardMaterial color={wallPreset.color} roughness={wallPreset.roughness} transparent opacity={COLORS.wallOpacity} />
                 </mesh>
               );
             })}

@@ -80,7 +80,7 @@ function App() {
         <SnapGuidelines />
         <PostProcessing />
         <CameraController preset={cameraPreset} />
-        <gridHelper args={[20, 20, '#444', '#333']} />
+        <gridHelper args={[20, 20, '#333', '#2a2a2a']} />
         <mesh
           rotation-x={-Math.PI / 2}
           position={[0, -0.01, 0]}

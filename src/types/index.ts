@@ -23,6 +23,8 @@ export interface RoomInstance {
   position: [number, number];
   locked?: boolean;
   wallElements?: WallElement[];
+  floorMaterial?: string;
+  wallMaterial?: string;
 }
 
 export type MaterialType = 'wood' | 'fabric' | 'metal' | 'ceramic' | 'plastic' | 'glass';
