@@ -18,7 +18,7 @@ export function furnitureAABB(item: FurnitureInstance): AABB {
   };
 }
 
-export function aabbOverlap(a: AABB, b: AABB): boolean {
+function aabbOverlap(a: AABB, b: AABB): boolean {
   return a.minX < b.maxX && a.maxX > b.minX && a.minZ < b.maxZ && a.maxZ > b.minZ;
 }
 

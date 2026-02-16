@@ -1,6 +1,6 @@
 import type { MaterialType } from '../types';
 
-export interface PBRConfig {
+interface PBRConfig {
   roughness: number;
   metalness: number;
   clearcoat?: number;
@@ -17,8 +17,3 @@ export const materialPresets: Record<MaterialType, PBRConfig> = {
   plastic:  { roughness: 0.5, metalness: 0.0 },
   glass:    { roughness: 0.1, metalness: 0.1, opacity: 0.6, transparent: true },
 };
-
-export function getMaterialProps(materialType: MaterialType, color: string) {
-  const preset = materialPresets[materialType];
-  return { color, ...preset };
-}

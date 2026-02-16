@@ -2,7 +2,6 @@ import { useState } from 'react';
 import type { RoomInstance, WallSide, WallElement } from '../../types';
 import { useStore } from '../../store/useStore';
 import { createDefaultRoom, DEFAULT_ROOM, FLOOR_PRESETS, WALL_PRESETS } from '../../utils/constants';
-import type { SurfacePreset } from '../../utils/constants';
 import { generateId } from '../../utils/ids';
 
 const WALL_LABELS: Record<WallSide, string> = {

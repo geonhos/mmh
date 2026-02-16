@@ -8,12 +8,10 @@ export const DEFAULT_ROOM: RoomConfig = {
 };
 
 export const COLORS = {
-  wall: '#e8e0d8',
-  floor: '#c4a882',
   wallOpacity: 0.3,
 };
 
-export interface SurfacePreset {
+interface SurfacePreset {
   id: string;
   label: string;
   color: string;
