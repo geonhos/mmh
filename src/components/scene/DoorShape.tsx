@@ -38,24 +38,25 @@ export default function DoorShape({ width, height, swingSign = -1 }: DoorShapePr
   const cos45 = Math.cos(Math.PI / 4);
   const sin45 = Math.sin(Math.PI / 4);
 
-  // Arc outline geometry
-  const arcLineGeom = useMemo(() => {
+  // Arc outline as THREE.Line object
+  const arcLine = useMemo(() => {
     const geo = new THREE.BufferGeometry();
     const pts = arcPoints.map(([x, y, z]) => new THREE.Vector3(x, y, z));
     geo.setFromPoints(pts);
-    return geo;
+    return new THREE.Line(geo, new THREE.LineBasicMaterial({ color: '#646cff', transparent: true, opacity: 0.5 }));
   }, [arcPoints]);
 
-  // Dashed open-position line (needs computeLineDistances for dashes to render)
+  // Dashed open-position line
   const openLine = useMemo(() => {
     const geo = new THREE.BufferGeometry();
     geo.setFromPoints([
       new THREE.Vector3(0, 0, 0),
       new THREE.Vector3(0, 0, panelWidth * swingSign),
     ]);
-    const line = new THREE.Line(geo);
+    const mat = new THREE.LineDashedMaterial({ color: '#646cff', transparent: true, opacity: 0.35, dashSize: 0.06, gapSize: 0.04 });
+    const line = new THREE.Line(geo, mat);
     line.computeLineDistances();
-    return line.geometry;
+    return line;
   }, [panelWidth, swingSign]);
 
   return (
@@ -96,20 +97,10 @@ export default function DoorShape({ width, height, swingSign = -1 }: DoorShapePr
         </mesh>
 
         {/* Arc outline */}
-        <line geometry={arcLineGeom}>
-          <lineBasicMaterial color="#646cff" transparent opacity={0.5} />
-        </line>
+        <primitive object={arcLine} />
 
         {/* Open position dashed line */}
-        <line geometry={openLine}>
-          <lineDashedMaterial
-            color="#646cff"
-            transparent
-            opacity={0.35}
-            dashSize={0.06}
-            gapSize={0.04}
-          />
-        </line>
+        <primitive object={openLine} />
 
         {/* Dimension label */}
         <DimensionLabel
