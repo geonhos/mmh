@@ -1,11 +1,6 @@
 import { useState, useEffect } from 'react';
 import Sidebar from './components/layout/Sidebar';
 import Viewport from './components/layout/Viewport';
-import RoomConfigurator from './components/sidebar/RoomConfigurator';
-import FurnitureCatalog from './components/sidebar/FurnitureCatalog';
-import FurniturePanel from './components/sidebar/FurniturePanel';
-import PlacedFurnitureList from './components/sidebar/PlacedFurnitureList';
-import ToolBar from './components/sidebar/ToolBar';
 import ShortcutHelp from './components/sidebar/ShortcutHelp';
 import ContextMenu from './components/ContextMenu';
 import { ContactShadows } from '@react-three/drei';
@@ -51,17 +46,11 @@ function App() {
 
   return (
     <div className="app-layout">
-      <Sidebar>
-        <RoomConfigurator />
-        <PlacedFurnitureList />
-        <FurnitureCatalog />
-        <ToolBar
-          cameraPreset={cameraPreset}
-          onCameraChange={setCameraPreset}
-          onShowShortcuts={() => setShortcutHelpOpen(true)}
-        />
-        <FurniturePanel />
-      </Sidebar>
+      <Sidebar
+        cameraPreset={cameraPreset}
+        onCameraChange={setCameraPreset}
+        onShowShortcuts={() => setShortcutHelpOpen(true)}
+      />
       <Viewport>
         <SceneLighting />
         <FloorPlanOverlay />

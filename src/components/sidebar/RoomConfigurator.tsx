@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import type { RoomInstance, WallSide, WallElement } from '../../types';
 import { useStore } from '../../store/useStore';
 import { createDefaultRoom, DEFAULT_ROOM } from '../../utils/constants';
@@ -47,6 +48,7 @@ export default function RoomConfigurator() {
   const addWallElement = useStore((s) => s.addWallElement);
   const updateWallElement = useStore((s) => s.updateWallElement);
   const removeWallElement = useStore((s) => s.removeWallElement);
+  const [wallOpen, setWallOpen] = useState(false);
 
   const selectedRoom = rooms.find((r) => r.id === selectedRoomId);
 
@@ -225,8 +227,26 @@ export default function RoomConfigurator() {
             ))}
           </div>
 
-          {/* Doors & Windows */}
-          <div style={{ marginBottom: 8, color: '#888', fontSize: 12 }}>문/창문</div>
+          {/* Doors & Windows (collapsible) */}
+          <button
+            style={{
+              width: '100%', background: 'none', border: 'none',
+              color: '#888', fontSize: 12, cursor: 'pointer',
+              display: 'flex', alignItems: 'center', gap: 4,
+              padding: '4px 0', marginBottom: wallOpen ? 8 : 0,
+            }}
+            onClick={() => setWallOpen(!wallOpen)}
+          >
+            <span style={{
+              display: 'inline-block', transform: wallOpen ? 'rotate(90deg)' : 'rotate(0)',
+              transition: 'transform 0.15s', fontSize: 10,
+            }}>
+              ▶
+            </span>
+            문/창문 ({(selectedRoom.wallElements ?? []).length})
+          </button>
+          {wallOpen && (
+          <>
           <div style={{ display: 'flex', gap: 6, marginBottom: 8 }}>
             <button
               className="preset-btn"
@@ -380,6 +400,8 @@ export default function RoomConfigurator() {
               </div>
             </div>
           ))}
+          </>
+          )}
         </>
       )}
     </section>

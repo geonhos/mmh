@@ -2,24 +2,12 @@ import { useRef } from 'react';
 import { useStore } from '../../store/useStore';
 import { getSceneRefs } from '../scene/SceneBridge';
 import { encodeStateToHash } from '../../utils/sharing';
-import type { CameraPreset } from '../scene/CameraController';
 
 interface ToolBarProps {
-  cameraPreset: CameraPreset;
-  onCameraChange: (preset: CameraPreset) => void;
   onShowShortcuts?: () => void;
 }
 
-export default function ToolBar({ cameraPreset, onCameraChange, onShowShortcuts }: ToolBarProps) {
-  const selectedFurnitureIds = useStore((s) => s.selectedFurnitureIds);
-  const furnitureList = useStore((s) => s.furnitureList);
-  const updateFurniture = useStore((s) => s.updateFurniture);
-  const removeFurniture = useStore((s) => s.removeFurniture);
-  const duplicateFurniture = useStore((s) => s.duplicateFurniture);
-  const undo = useStore((s) => s.undo);
-  const redo = useStore((s) => s.redo);
-  const historyLength = useStore((s) => s._history.length);
-  const futureLength = useStore((s) => s._future.length);
+export default function ToolBar({ onShowShortcuts }: ToolBarProps) {
   const snapEnabled = useStore((s) => s.snapEnabled);
   const setSnapEnabled = useStore((s) => s.setSnapEnabled);
   const ppQuality = useStore((s) => s.postProcessingQuality);
@@ -32,96 +20,10 @@ export default function ToolBar({ cameraPreset, onCameraChange, onShowShortcuts 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const floorPlanInputRef = useRef<HTMLInputElement>(null);
 
-  const selectedItem = selectedFurnitureIds.length === 1
-    ? furnitureList.find((f) => f.id === selectedFurnitureIds[0])
-    : null;
-
-  const rotateY = (angle: number) => {
-    if (!selectedItem) return;
-    updateFurniture(selectedItem.id, {
-      rotation: [selectedItem.rotation[0], selectedItem.rotation[1] + angle, selectedItem.rotation[2]],
-    });
-  };
-
   return (
-    <section style={{ marginBottom: 24 }}>
-      {/* Furniture actions */}
-      {selectedItem && (
-        <>
-          <h3 style={{ fontSize: 14, marginBottom: 8, color: '#aaa' }}>가구 조작</h3>
-          <div style={{ display: 'flex', gap: 6, marginBottom: 10 }}>
-            <button
-              className="preset-btn"
-              style={{ flex: 1 }}
-              onClick={() => rotateY(-Math.PI / 2)}
-              title="왼쪽으로 90° 회전 (Shift+R)"
-            >
-              ← 90° 회전
-            </button>
-            <button
-              className="preset-btn"
-              style={{ flex: 1 }}
-              onClick={() => rotateY(Math.PI / 2)}
-              title="오른쪽으로 90° 회전 (R)"
-            >
-              90° 회전 →
-            </button>
-          </div>
-          <button
-            className="preset-btn"
-            style={{ width: '100%', marginBottom: 6 }}
-            onClick={() => duplicateFurniture(selectedFurnitureIds[0])}
-            title="선택한 가구를 복제합니다 (Ctrl+D)"
-          >
-            복제 (Ctrl+D)
-          </button>
-          <button
-            className="preset-btn"
-            style={{ width: '100%', color: '#ff6b6b', marginBottom: 10 }}
-            onClick={() => removeFurniture(selectedFurnitureIds[0])}
-          >
-            삭제 (Del)
-          </button>
-        </>
-      )}
-
-      {/* Undo/Redo */}
-      <h3 style={{ fontSize: 14, marginBottom: 8, color: '#aaa' }}>실행취소</h3>
-      <div style={{ display: 'flex', gap: 6, marginBottom: 10 }}>
-        <button className="preset-btn" style={{ flex: 1 }}
-          onClick={undo} disabled={historyLength === 0}
-          title="실행취소 (Ctrl+Z)">
-          ↩ 실행취소
-        </button>
-        <button className="preset-btn" style={{ flex: 1 }}
-          onClick={redo} disabled={futureLength === 0}
-          title="다시실행 (Ctrl+Shift+Z)">
-          다시실행 ↪
-        </button>
-      </div>
-
-      {/* View */}
-      <h3 style={{ fontSize: 14, marginBottom: 8, color: '#aaa' }}>보기</h3>
-      <div style={{ display: 'flex', gap: 6, marginBottom: 10 }}>
-        <button
-          className={`preset-btn ${cameraPreset === 'perspective' ? 'active' : ''}`}
-          onClick={() => onCameraChange('perspective')}
-        >
-          3D 뷰
-        </button>
-        <button
-          className={`preset-btn ${cameraPreset === 'top' ? 'active' : ''}`}
-          onClick={() => onCameraChange('top')}
-        >
-          위에서 보기
-        </button>
-        <button
-          className={`preset-btn ${cameraPreset === 'walkthrough' ? 'active' : ''}`}
-          onClick={() => onCameraChange('walkthrough')}
-        >
-          1인칭 보기
-        </button>
-      </div>
+    <div>
+      {/* Display */}
+      <h3 style={{ fontSize: 14, marginBottom: 8, color: '#aaa' }}>화면</h3>
       <div style={{ display: 'flex', gap: 6, marginBottom: 6 }}>
         <button
           className={`preset-btn ${snapEnabled ? 'active' : ''}`}
@@ -136,7 +38,7 @@ export default function ToolBar({ cameraPreset, onCameraChange, onShowShortcuts 
           ? 단축키
         </button>
       </div>
-      <button className="preset-btn" style={{ width: '100%', marginBottom: 10 }}
+      <button className="preset-btn" style={{ width: '100%', marginBottom: 16 }}
         onClick={() => {
           const cycle = { off: 'low', low: 'high', high: 'off' } as const;
           setPPQuality(cycle[ppQuality]);
@@ -180,7 +82,7 @@ export default function ToolBar({ cameraPreset, onCameraChange, onShowShortcuts 
         }}
       />
       {floorPlan && (
-        <div style={{ marginBottom: 10 }}>
+        <div style={{ marginBottom: 16 }}>
           <label style={{ fontSize: 12, color: '#888', display: 'block', marginBottom: 4 }}>
             크기 (가로 {floorPlan.width.toFixed(1)}m)
             <input type="range" min={2} max={30} step={0.5}
@@ -266,6 +168,6 @@ export default function ToolBar({ cameraPreset, onCameraChange, onShowShortcuts 
           }}
         />
       </div>
-    </section>
+    </div>
   );
 }

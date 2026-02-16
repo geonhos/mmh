@@ -295,7 +295,11 @@ function RoomInner({ room, isSelected, onSelect, children }: RoomProps) {
               return (
                 <group key={el.id} position={pos} rotation-y={isHorizontal ? 0 : Math.PI / 2}>
                   {el.type === 'door' ? (
-                    <DoorShape width={el.width} height={el.height} />
+                    <DoorShape
+                      width={el.width}
+                      height={el.height}
+                      swingSign={side === 'north' || side === 'west' ? 1 : -1}
+                    />
                   ) : (
                     <WindowShape width={el.width} height={el.height} />
                   )}
